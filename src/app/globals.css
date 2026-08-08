@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/*
+ * SKY — beachfront lounge.
+ * Daylight sky identity: pale sky-blue ground, deep navy text, dark green and
+ * gold accents, sky-blue wordmark. Fixed light appearance — this deliberately
+ * does NOT follow the device light/dark preference.
+ *
+ * Gold and sky blue both lose contrast on a pale ground, so the accent tones
+ * here are deeper than their on-black equivalents.
+ */
+:root {
+  color-scheme: light;
+
+  --bg: #e8f4fc;
+  --bg-top: #f4fbff;
+  --bg-bottom: #cfe7f6;
+
+  --surface: #ffffff;
+  --surface-2: #eaf4fb;
+  --surface-3: #dbecf7;
+
+  --green: #14503c;
+  --green-deep: #0e3b2c;
+  --blue: #1b5f8f;
+  --blue-deep: #0f4269;
+
+  /* Gold reads as gold but is deepened to clear 4.5:1 on pale sky. */
+  --gold: #7d6017;
+  --gold-strong: #6b5214;
+  --gold-line: rgb(150 117 31 / 0.38);
+  --gold-line-soft: rgb(150 117 31 / 0.2);
+
+  --text: #0b2a45;
+  --muted: #4a6b85;
+  --muted-dim: #4f6c84;
+
+  --sky-1: #12608f;
+  --sky-2: #5fc8f5;
+  --sky-3: #a8e4ff;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Sticky header + section nav clearance for anchor jumps. */
+  scroll-padding-top: 8.5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  /* Open sky overhead easing down to sea light at the foot of the page. */
+  background-color: var(--bg);
+  background-image: linear-gradient(
+    180deg,
+    var(--bg-top) 0%,
+    var(--bg) 45%,
+    var(--bg-bottom) 100%
+  );
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+}
+
+/* Horizontal section nav scrolls without a visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * The SKY wordmark: sky-blue gradient with a highlight that drifts across it.
+ * Anchored on deeper blues so the letters stay legible against pale sky.
+ */
+.sky-wordmark {
+  background-image: linear-gradient(
+    100deg,
+    var(--blue-deep) 0%,
+    var(--blue) 20%,
+    var(--sky-2) 42%,
+    var(--blue) 64%,
+    var(--blue-deep) 100%
+  );
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: sky-shine 7s ease-in-out infinite;
+}
+
+@keyframes sky-shine {
+  0%,
+  100% {
+    background-position: 100% 0;
+  }
+  50% {
+    background-position: 0% 0;
+  }
+}
+
+/* Thin gold rule used under section headings. */
+.gold-rule {
+  background: linear-gradient(
+    90deg,
+    var(--gold) 0%,
+    var(--gold-line) 45%,
+    transparent 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .sky-wordmark {
+    animation: none;
+    background-position: 50% 0;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
