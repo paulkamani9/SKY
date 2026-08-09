@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="gvskin" cx="34%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#cfe07a"/>
+      <stop offset="60%" stop-color="#9dbf4e"/>
+      <stop offset="100%" stop-color="#6d8f32"/>
+    </radialGradient>
+    <radialGradient id="gvflesh" cx="45%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#ffb3b0"/>
+      <stop offset="70%" stop-color="#f47a75"/>
+      <stop offset="100%" stop-color="#d94f52"/>
+    </radialGradient>
+  </defs>
+  <path d="M100 30c-38 0-68 30-68 68 0 40 30 72 68 72s68-32 68-72c0-38-30-68-68-68z" fill="url(#gvskin)"/>
+  <path d="M100 44c-31 0-56 25-56 56 0 33 25 58 56 58s56-25 56-58c0-31-25-56-56-56z" fill="#f7f1d8"/>
+  <ellipse cx="100" cy="102" rx="42" ry="44" fill="url(#gvflesh)"/>
+  <g fill="#f6e6bf">
+    <circle cx="88" cy="88" r="5"/><circle cx="110" cy="86" r="5"/>
+    <circle cx="118" cy="106" r="5"/><circle cx="98" cy="108" r="5"/>
+    <circle cx="82" cy="112" r="5"/><circle cx="106" cy="124" r="5"/>
+    <circle cx="90" cy="128" r="5"/>
+  </g>
+  <path d="M100 30c-2-10 2-19 10-24-2 10-4 18-4 24z" fill="#3f7a34"/>
+  <path d="M48 66a68 68 0 0 1 30-26 68 68 0 0 0-26 32z" fill="#ffffff" opacity=".26"/>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="chusk" cx="34%" cy="28%" r="82%">
+      <stop offset="0%" stop-color="#8b5a35"/>
+      <stop offset="60%" stop-color="#5d3620"/>
+      <stop offset="100%" stop-color="#331c10"/>
+    </radialGradient>
+    <linearGradient id="cflesh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e6d9c6"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="72" fill="url(#chusk)"/>
+  <circle cx="100" cy="100" r="58" fill="#c9a06a" opacity=".55"/>
+  <circle cx="100" cy="100" r="52" fill="url(#cflesh)"/>
+  <circle cx="100" cy="100" r="34" fill="#f0e4d2"/>
+  <g stroke="#6f4526" stroke-width="2" opacity=".35" fill="none">
+    <path d="M40 78c18 6 36 8 54 6M40 122c18-6 36-8 54-6M118 40c-6 16-8 32-6 48M118 160c-6-16-8-32-6-48"/>
+  </g>
+  <path d="M52 62a72 72 0 0 1 32-26 72 72 0 0 0-28 32z" fill="#ffffff" opacity=".22"/>
+</svg>

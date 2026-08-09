@@ -33,9 +33,33 @@ type Seed = {
   groupEn?: string;
   groupFr?: string;
   photoId?: string;
+  /**
+   * A transparent cut-out served from /public — what the grid is designed
+   * around. Drop-in replacement point for real product photography: swap the
+   * file behind the same path and nothing here has to change.
+   */
+  cutout?: string;
 };
 
 function item(seed: Seed): Dish {
+  if (seed.cutout) {
+    return {
+      _id: seed.id,
+      nameEn: seed.en,
+      nameFr: seed.fr,
+      descriptionEn: seed.descEn,
+      descriptionFr: seed.descFr,
+      price: seed.price ?? null,
+      priceNoteEn: seed.noteEn,
+      priceNoteFr: seed.noteFr,
+      groupEn: seed.groupEn,
+      groupFr: seed.groupFr,
+      available: true,
+      imageUrl: seed.cutout,
+      imageUrlLarge: seed.cutout,
+    };
+  }
+
   return {
     _id: seed.id,
     nameEn: seed.en,
@@ -70,9 +94,9 @@ export const menuSettings: Settings = {
   currency: "Rs",
   logoUrl: null,
   noticeEn:
-    "A curated collection of artisanal gelato, cold-pressed tropical fruits and premium specialty coffee, crafted to be enjoyed by the ocean. Photos are illustrative.",
+    "A curated collection of artisanal gelato, cold-pressed tropical fruits and premium specialty coffee, crafted to be enjoyed by the ocean.",
   noticeFr:
-    "Une collection choisie de glaces artisanales, de fruits tropicaux pressés à froid et de cafés de spécialité, à savourer face à l'océan. Photos non contractuelles.",
+    "Une collection choisie de glaces artisanales, de fruits tropicaux pressés à froid et de cafés de spécialité, à savourer face à l'océan.",
 };
 
 export const menuCategories: Category[] = [
@@ -101,7 +125,7 @@ export const menuCategories: Category[] = [
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
-        photoId: "1605027990121-cbae9e0642df",
+        cutout: "/fruit/mango.svg",
       },
       {
         id: "gel-passion",
@@ -112,7 +136,7 @@ export const menuCategories: Category[] = [
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
-        photoId: "1604495772376-9657f0035eb5",
+        cutout: "/fruit/passion-fruit.svg",
       },
       {
         id: "gel-pineapple",
@@ -123,7 +147,7 @@ export const menuCategories: Category[] = [
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
-        photoId: "1610832958506-aa56368176cf",
+        cutout: "/fruit/pineapple.svg",
       },
       {
         id: "gel-coco",
@@ -134,7 +158,7 @@ export const menuCategories: Category[] = [
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
-        photoId: "1519996529931-28324d5a630e",
+        cutout: "/fruit/coconut.svg",
       },
       {
         id: "gel-grapefruit",
@@ -145,6 +169,7 @@ export const menuCategories: Category[] = [
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        cutout: "/fruit/grapefruit.svg",
       },
       {
         id: "gel-guava",
@@ -155,6 +180,7 @@ export const menuCategories: Category[] = [
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        cutout: "/fruit/guava.svg",
       },
       {
         id: "gel-vanilla",

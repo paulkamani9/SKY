@@ -11,6 +11,9 @@
  * Requires SANITY_WRITE_TOKEN in .env.local — create one at sanity.io/manage
  * under API → Tokens with Editor permissions.
  */
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { createClient } from "@sanity/client";
 
 import { menuCategories, menuSettings } from "../src/lib/menuContent";
@@ -36,15 +39,51 @@ const client = createClient({
   useCdn: false,
 });
 
-/** Uploads a placeholder photo and returns a Sanity image reference. */
-async function uploadPhoto(url: string, filename: string) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Download failed (${response.status}) for ${filename}`);
+const CONTENT_TYPES: Record<string, string> = {
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+};
+
+/**
+ * Uploads an image and returns a Sanity image reference.
+ *
+ * Two kinds of source: remote placeholder photos, and the cut-outs served from
+ * /public, which arrive as root-relative paths like "/fruit/mango.svg". fetch()
+ * cannot parse those — there is no origin to resolve them against in Node — so
+ * they are read off disk instead.
+ */
+async function uploadPhoto(source: string, filename: string) {
+  const isLocal = source.startsWith("/");
+  // Extension drives the stored filename and content type; hard-coding .jpg
+  // would mislabel every cut-out.
+  const extension = (path.extname(isLocal ? source : ".jpg") || ".jpg")
+    .toLowerCase()
+    .split("?")[0];
+
+  let buffer: Buffer;
+
+  if (isLocal) {
+    const onDisk = path.join(process.cwd(), "public", source);
+    try {
+      buffer = await readFile(onDisk);
+    } catch {
+      throw new Error(`Not found in public/: ${source}`);
+    }
+  } else {
+    const response = await fetch(source);
+    if (!response.ok) {
+      throw new Error(`Download failed (${response.status}) for ${filename}`);
+    }
+    buffer = Buffer.from(await response.arrayBuffer());
   }
-  const buffer = Buffer.from(await response.arrayBuffer());
+
   const asset = await client.assets.upload("image", buffer, {
-    filename: `${filename}.jpg`,
+    filename: `${filename}${extension}`,
+    contentType: CONTENT_TYPES[extension] ?? "image/jpeg",
   });
   return { _type: "image", asset: { _type: "reference", _ref: asset._id } };
 }

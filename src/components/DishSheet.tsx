@@ -48,7 +48,7 @@ export function DishSheet({ dish, lang, currency, onClose }: Props) {
       aria-label={name}
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-end justify-center backdrop-blur-sm sm:items-center sm:p-6"
-      style={{ background: "rgb(11 42 69 / 0.55)" }}
+      style={{ background: "rgb(1 40 48 / 0.62)" }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -83,10 +83,11 @@ export function DishSheet({ dish, lang, currency, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label={t(lang, "close")}
-            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full text-2xl leading-none text-white transition active:scale-95"
+            className="absolute top-3 right-3 flex h-10 w-10 items-center justify-center rounded-full text-2xl leading-none transition active:scale-95"
             style={{
-              background: "rgb(11 42 69 / 0.62)",
-              border: "1px solid rgb(255 255 255 / 0.28)",
+              background: "rgb(1 40 48 / 0.7)",
+              border: "1px solid var(--gold-line)",
+              color: "var(--ink)",
             }}
           >
             <span aria-hidden="true">×</span>

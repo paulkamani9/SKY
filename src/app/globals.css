@@ -2,42 +2,55 @@
 
 /*
  * SKY — beachfront lounge.
- * Daylight sky identity: pale sky-blue ground, deep navy text, dark green and
- * gold accents, sky-blue wordmark. Fixed light appearance — this deliberately
- * does NOT follow the device light/dark preference.
+ * Two brand colours and nothing else: PMS 3145 C (#00778b) is the ground,
+ * PMS 317 C (#c4e5e9) is every word on it. Fixed dark appearance — this
+ * deliberately does NOT follow the device light/dark preference.
  *
- * Gold and sky blue both lose contrast on a pale ground, so the accent tones
- * here are deeper than their on-black equivalents.
+ * 317 on 3145 measures 3.9:1, which is under the 4.5:1 floor, so the masthead
+ * keeps the pure brand teal and the reading field settles deeper (#015d6e →
+ * #01414f), where the same ink clears 5.6:1. That gradient is load-bearing:
+ * lightening the field back to flat 3145 puts every word under the floor.
+ *
+ * Hierarchy is carried by size, weight and letter-spacing rather than hue,
+ * since tinting 317 in any direction costs contrast it does not have to spare.
  */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  --bg: #e8f4fc;
-  --bg-top: #f4fbff;
-  --bg-bottom: #cfe7f6;
+  --brand: #00778b; /* PMS 3145 C */
+  --ink: #c4e5e9; /* PMS 317 C */
 
-  --surface: #ffffff;
-  --surface-2: #eaf4fb;
-  --surface-3: #dbecf7;
+  --bg: #015d6e;
+  --bg-top: #00778b;
+  --bg-bottom: #01414f;
 
-  --green: #14503c;
-  --green-deep: #0e3b2c;
-  --blue: #1b5f8f;
-  --blue-deep: #0f4269;
+  --surface: #01596a;
+  --surface-2: #016a7c;
+  --surface-3: #027e93;
 
-  /* Gold reads as gold but is deepened to clear 4.5:1 on pale sky. */
-  --gold: #7d6017;
-  --gold-strong: #6b5214;
-  --gold-line: rgb(150 117 31 / 0.38);
-  --gold-line-soft: rgb(150 117 31 / 0.2);
+  --green: #0d6a53;
+  --green-deep: #08493a;
+  --blue: #014e5e;
+  --blue-deep: #013a46;
 
-  --text: #0b2a45;
-  --muted: #4a6b85;
-  --muted-dim: #4f6c84;
+  /*
+   * Gold-green: the one accent allowed to break the two-colour scheme, on
+   * section titles, their rules, and prices. It has to sit this light — a
+   * true antique gold-green (#b9c27a) drops to 3.9:1 on the teal field, so
+   * the green is carried by hue rather than by depth.
+   */
+  --gold: #d2dc93;
+  --gold-strong: #dee6a8;
+  --gold-line: rgb(210 220 147 / 0.42);
+  --gold-line-soft: rgb(210 220 147 / 0.2);
 
-  --sky-1: #12608f;
-  --sky-2: #5fc8f5;
-  --sky-3: #a8e4ff;
+  --text: var(--ink);
+  --muted: var(--ink);
+  --muted-dim: var(--ink);
+
+  --sky-1: var(--ink);
+  --sky-2: #8fe3ff;
+  --sky-3: #c8f2ff;
 }
 
 html {
@@ -79,11 +92,11 @@ body {
 .sky-wordmark {
   background-image: linear-gradient(
     100deg,
-    var(--blue-deep) 0%,
-    var(--blue) 20%,
-    var(--sky-2) 42%,
-    var(--blue) 64%,
-    var(--blue-deep) 100%
+    var(--ink) 0%,
+    var(--ink) 20%,
+    #ffffff 42%,
+    var(--ink) 64%,
+    var(--ink) 100%
   );
   background-size: 250% 100%;
   background-position: 100% 0;
@@ -102,6 +115,16 @@ body {
   50% {
     background-position: 0% 0;
   }
+}
+
+/*
+ * Section headings. The script only works set large and in mixed case — the
+ * old uppercase + 0.22em tracking would pull the joins apart and leave it
+ * unreadable — so the size and casing here are part of the typeface choice.
+ */
+.script-heading {
+  font-family: var(--font-script), "Snell Roundhand", "Segoe Script", cursive;
+  letter-spacing: 0.01em;
 }
 
 /* Thin gold rule used under section headings. */

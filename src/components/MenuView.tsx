@@ -14,10 +14,23 @@ type Props = {
   settings: Settings | null;
 };
 
-/** Items in section order, split into their sub-groups (if any). */
-type Group = { key: string; title: string; dishes: Dish[] };
+/**
+ * Items in section order, split into their sub-groups (if any).
+ *
+ * `sharedPrice` is set when every dish in the group carries the same price
+ * label — the whole tropical sorbet range at Rs 125, both wellness shots at
+ * Rs 150. That price is printed once on the group heading instead of being
+ * repeated under every item.
+ */
+type Group = {
+  key: string;
+  title: string;
+  dishes: Dish[];
+  sharedPrice: string | null;
+  sharedIsNumeric: boolean;
+};
 
-function groupDishes(category: Category, lang: Lang): Group[] {
+function groupDishes(category: Category, lang: Lang, currency: string): Group[] {
   const groups: Group[] = [];
 
   for (const dish of category.dishes) {
@@ -26,7 +39,31 @@ function groupDishes(category: Category, lang: Lang): Group[] {
     const last = groups[groups.length - 1];
 
     if (last && last.key === key) last.dishes.push(dish);
-    else groups.push({ key, title, dishes: [dish] });
+    else
+      groups.push({
+        key,
+        title,
+        dishes: [dish],
+        sharedPrice: null,
+        sharedIsNumeric: false,
+      });
+  }
+
+  for (const group of groups) {
+    // With no heading there is nowhere to hoist the price to, and a group of
+    // one has nothing to share it with.
+    if (!group.title || group.dishes.length < 2) continue;
+
+    const first = priceLabel(group.dishes[0], lang, currency);
+    if (!first) continue;
+
+    const uniform = group.dishes.every(
+      (d) => priceLabel(d, lang, currency) === first,
+    );
+    if (!uniform) continue;
+
+    group.sharedPrice = first;
+    group.sharedIsNumeric = isNumericPrice(group.dishes[0]);
   }
 
   return groups;
@@ -204,7 +241,7 @@ export function MenuView({ categories, settings }: Props) {
                     background: isActive
                       ? "linear-gradient(140deg, var(--blue) 0%, var(--green) 100%)"
                       : "transparent",
-                    color: isActive ? "#fdf6e3" : "var(--muted-dim)",
+                    color: isActive ? "var(--ink)" : "var(--muted-dim)",
                     boxShadow: isActive
                       ? "inset 0 0 0 1px var(--gold-line)"
                       : "none",
@@ -240,7 +277,7 @@ export function MenuView({ categories, settings }: Props) {
                       background: isActive
                         ? "linear-gradient(140deg, var(--blue) 0%, var(--green) 100%)"
                         : "var(--surface)",
-                      color: isActive ? "#fdf6e3" : "var(--muted)",
+                      color: isActive ? "var(--ink)" : "var(--muted)",
                     }}
                   >
                     {pick(lang, c.titleEn, c.titleFr)}
@@ -309,7 +346,10 @@ function SectionBlock({
   currency: string;
   onOpen: (dish: Dish) => void;
 }) {
-  const groups = useMemo(() => groupDishes(category, lang), [category, lang]);
+  const groups = useMemo(
+    () => groupDishes(category, lang, currency),
+    [category, lang, currency],
+  );
 
   const intro = pick(lang, category.introEn, category.introFr);
   const footnote = pick(lang, category.footnoteEn, category.footnoteFr);
@@ -318,7 +358,7 @@ function SectionBlock({
   return (
     <section id={`section-${category._id}`} className="scroll-mt-36 pt-9">
       <h2
-        className="text-[13px] font-semibold tracking-[0.22em] uppercase"
+        className="script-heading text-[30px] leading-tight font-semibold"
         style={{ color: "var(--gold)" }}
       >
         {pick(lang, category.titleEn, category.titleFr)}
@@ -338,33 +378,40 @@ function SectionBlock({
         <div key={group.key || "ungrouped"}>
           {group.title ? (
             <h3
-              className="mt-5 mb-2 text-[11px] font-semibold tracking-[0.18em] uppercase"
+              className="mt-5 mb-2 flex items-baseline gap-3 text-[11px] font-semibold tracking-[0.18em] uppercase"
               style={{ color: "var(--sky-1)" }}
             >
-              {group.title}
+              <span className="min-w-0">{group.title}</span>
+              {group.sharedPrice ? (
+                <span
+                  // normal-case so the currency stays "Rs", not "RS".
+                  className={`ml-auto shrink-0 normal-case tracking-normal ${
+                    group.sharedIsNumeric
+                      ? "text-[12px] tabular-nums"
+                      : "text-[11px] italic"
+                  }`}
+                  style={{ color: "var(--gold-strong)" }}
+                >
+                  {group.sharedPrice}
+                </span>
+              ) : null}
             </h3>
           ) : null}
 
           {isGrid ? (
-            <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">
               {group.dishes.map((dish) => (
                 <DishCard
                   key={dish._id}
                   dish={dish}
                   lang={lang}
                   currency={currency}
-                  onOpen={() => onOpen(dish)}
+                  hidePrice={group.sharedPrice !== null}
                 />
               ))}
             </ul>
           ) : (
-            <ul
-              className="mt-2 overflow-hidden rounded-xl"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--gold-line-soft)",
-              }}
-            >
+            <ul className="mt-2">
               {group.dishes.map((dish, i) => (
                 <DishRow
                   key={dish._id}
@@ -372,6 +419,7 @@ function SectionBlock({
                   lang={lang}
                   currency={currency}
                   divided={i > 0}
+                  hidePrice={group.sharedPrice !== null}
                   onOpen={() => onOpen(dish)}
                 />
               ))}
@@ -392,108 +440,159 @@ function SectionBlock({
   );
 }
 
+/**
+ * A dish in a grid section: no card, no frame. The cut-out photo sits straight
+ * on the navy ground with its price beneath it, and a tap flips the tile over
+ * to reveal the name and description. Tapping again flips it back.
+ */
 function DishCard({
   dish,
   lang,
   currency,
-  onOpen,
+  hidePrice,
 }: {
   dish: Dish;
   lang: Lang;
   currency: string;
-  onOpen: () => void;
+  hidePrice: boolean;
 }) {
+  const [flipped, setFlipped] = useState(false);
+
   const name = pick(lang, dish.nameEn, dish.nameFr);
   const description = pick(lang, dish.descriptionEn, dish.descriptionFr);
-  const price = priceLabel(dish, lang, currency);
+  const price = hidePrice ? null : priceLabel(dish, lang, currency);
   const numeric = isNumericPrice(dish);
   const soldOut = dish.available === false;
 
-  return (
-    <li className="contents">
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex h-full flex-col overflow-hidden rounded-xl text-left transition active:scale-[0.98]"
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--gold-line-soft)",
-        }}
-      >
-        {dish.imageUrl ? (
-          <div className="relative">
-            <img
-              src={dish.imageUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width={600}
-              height={450}
-              className="aspect-[4/3] w-full object-cover"
-              style={{
-                background: "var(--surface-2)",
-                filter: soldOut ? "grayscale(1)" : undefined,
-                opacity: soldOut ? 0.5 : 1,
-              }}
-            />
-            {soldOut ? (
-              <span
-                className="absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase"
-                style={{ background: "rgb(11 42 69 / 0.78)" }}
-              >
-                {t(lang, "soldOut")}
-              </span>
-            ) : null}
-          </div>
-        ) : (
-          // Keeps photo-less cards from looking broken next to photo cards.
-          <div
-            className="flex aspect-[4/3] w-full items-center justify-center"
-            style={{
-              background:
-                "linear-gradient(160deg, var(--surface-2) 0%, var(--surface-3) 100%)",
-            }}
-          >
-            <Wordmark className="text-lg opacity-55" />
-          </div>
-        )}
-
-        <div className="flex flex-1 flex-col gap-1 p-3">
+  // Nothing to flip away from, so this one just reads as text. It keeps the
+  // square footprint of its neighbours so the grid rows stay level.
+  if (!dish.imageUrl) {
+    return (
+      <li>
+        <div
+          className="flex aspect-square w-full flex-col justify-center gap-1.5 px-1 text-center"
+          style={{ opacity: soldOut ? 0.55 : 1 }}
+        >
           <h4
             className="text-[14px] leading-snug font-medium"
-            style={{ opacity: soldOut ? 0.6 : 1 }}
+            style={{ color: "var(--gold-strong)" }}
           >
             {name}
           </h4>
-
           {description ? (
             <p
-              className="line-clamp-2 text-[11.5px] leading-relaxed"
+              className="line-clamp-6 text-[11.5px] leading-relaxed"
               style={{ color: "var(--muted)" }}
             >
               {description}
             </p>
           ) : null}
+          {soldOut ? (
+            <p
+              className="text-[10px] font-semibold tracking-wide uppercase"
+              style={{ color: "var(--muted-dim)" }}
+            >
+              {t(lang, "soldOut")}
+            </p>
+          ) : null}
+        </div>
 
-          <div className="mt-auto flex items-center gap-2 pt-2">
-            {price ? (
-              <span
-                className={`text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
-                style={{ color: numeric ? "var(--gold-strong)" : "var(--muted)" }}
+        {price ? (
+          <p
+            className={`mt-2.5 text-center text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
+            style={{
+              color: numeric ? "var(--gold-strong)" : "var(--muted)",
+              opacity: soldOut ? 0.6 : 1,
+            }}
+          >
+            {price}
+          </p>
+        ) : null}
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => setFlipped((f) => !f)}
+        aria-expanded={flipped}
+        // The visible face carries no name until it is flipped, so the button
+        // has to name the dish itself for anyone not reading the picture.
+        aria-label={name}
+        className="block w-full text-left"
+      >
+        <div className="relative aspect-square w-full [perspective:900px]">
+          <div
+            className="absolute inset-0 transition-transform duration-500 ease-out [transform-style:preserve-3d]"
+            style={{ transform: flipped ? "rotateY(180deg)" : undefined }}
+          >
+            {/* Front — the picture, floating on the page background. */}
+            <div className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden]">
+              <img
+                src={dish.imageUrl}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width={600}
+                height={600}
+                className="h-full w-full object-contain"
+                style={{
+                  filter: soldOut
+                    ? "grayscale(1)"
+                    : "drop-shadow(0 14px 22px rgb(1 32 39 / 0.5))",
+                  opacity: soldOut ? 0.45 : 1,
+                }}
+              />
+
+              {soldOut ? (
+                <span
+                  className="absolute top-1 left-1 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase"
+                  style={{
+                    background: "rgb(1 40 48 / 0.82)",
+                    color: "var(--muted)",
+                  }}
+                >
+                  {t(lang, "soldOut")}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Back — the words the picture was standing in for. */}
+            <div
+              className="absolute inset-0 flex flex-col justify-center gap-1.5 px-1 text-center [backface-visibility:hidden] [transform:rotateY(180deg)]"
+              aria-hidden={!flipped}
+            >
+              <h4
+                className="text-[14px] leading-snug font-medium"
+                style={{ color: "var(--gold-strong)" }}
               >
-                {price}
-              </span>
-            ) : null}
-            {soldOut && !dish.imageUrl ? (
-              <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase"
-                style={{ background: "var(--surface-2)", color: "var(--muted)" }}
-              >
-                {t(lang, "soldOut")}
-              </span>
-            ) : null}
+                {name}
+              </h4>
+              {description ? (
+                <p
+                  className="line-clamp-6 text-[11.5px] leading-relaxed"
+                  style={{ color: "var(--muted)" }}
+                >
+                  {description}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
+
+        {price ? (
+          <p
+            className={`mt-2.5 text-center text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
+            style={{
+              color: numeric ? "var(--gold-strong)" : "var(--muted)",
+              opacity: soldOut ? 0.6 : 1,
+            }}
+          >
+            {price}
+          </p>
+        ) : null}
       </button>
     </li>
   );
@@ -504,17 +603,19 @@ function DishRow({
   lang,
   currency,
   divided,
+  hidePrice,
   onOpen,
 }: {
   dish: Dish;
   lang: Lang;
   currency: string;
   divided: boolean;
+  hidePrice: boolean;
   onOpen: () => void;
 }) {
   const name = pick(lang, dish.nameEn, dish.nameFr);
   const description = pick(lang, dish.descriptionEn, dish.descriptionFr);
-  const price = priceLabel(dish, lang, currency);
+  const price = hidePrice ? null : priceLabel(dish, lang, currency);
   const numeric = isNumericPrice(dish);
   const soldOut = dish.available === false;
 
