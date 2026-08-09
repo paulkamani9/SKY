@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "migrate:subcategories": "tsx --env-file=.env.local scripts/subcategories.ts"
   },
   "dependencies": {
     "@sanity/image-url": "^1.2.0",

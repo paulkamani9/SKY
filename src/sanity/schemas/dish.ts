@@ -57,17 +57,31 @@ export const dish = defineType({
       validation: (r) => r.required(),
     }),
     defineField({
-      name: "groupEn",
-      title: "Sub-group (English)",
-      type: "string",
+      name: "subcategory",
+      title: "Sub-section",
+      type: "reference",
+      to: [{ type: "subcategory" }],
       description:
-        'Optional heading within the section, e.g. "Premium Gelato" or "Iced & Chilled Coffee". Items sharing a sub-group are listed together.',
+        'Optional group within the section, e.g. "Premium Gelato". Leave empty for items that sit directly under the section title.',
+      // Only offer sub-sections belonging to the section already chosen above,
+      // so a Coffee item can never be filed under a Gelato group.
+      options: {
+        filter: ({ document }) => {
+          const ref = (
+            document as { category?: { _ref?: string } } | undefined
+          )?.category?._ref;
+          if (!ref) return { filter: "false" };
+          return {
+            filter: "category._ref == $categoryId",
+            params: { categoryId: ref },
+          };
+        },
+      },
     }),
-    defineField({
-      name: "groupFr",
-      title: "Sub-group (French)",
-      type: "string",
-    }),
+    // Superseded by the reference above. Kept so pre-migration data is never
+    // lost, and read at render time only when an item has no sub-section yet.
+    defineField({ name: "groupEn", title: "Sub-group (legacy)", type: "string", hidden: true }),
+    defineField({ name: "groupFr", title: "Sub-group (legacy, FR)", type: "string", hidden: true }),
     defineField({
       name: "order",
       title: "Order within section",
@@ -101,15 +115,31 @@ export const dish = defineType({
     select: {
       title: "nameEn",
       section: "category.titleEn",
+      group: "subcategory.titleEn",
+      legacyGroup: "groupEn",
       media: "image",
       price: "price",
       priceNote: "priceNoteEn",
       available: "available",
     },
-    prepare: ({ title, section, media, price, priceNote, available }) => ({
-      title: `${title}${available === false ? " — SOLD OUT" : ""}`,
-      subtitle: `${section ?? "No section"} · ${price ?? priceNote ?? "no price"}`,
+    prepare: ({
+      title,
+      section,
+      group,
+      legacyGroup,
       media,
-    }),
+      price,
+      priceNote,
+      available,
+    }) => {
+      const path = [section ?? "No section", group ?? legacyGroup]
+        .filter(Boolean)
+        .join(" › ");
+      return {
+        title: `${title}${available === false ? " — SOLD OUT" : ""}`,
+        subtitle: `${path} · ${price ?? priceNote ?? "no price"}`,
+        media,
+      };
+    },
   },
 });

@@ -39,6 +39,17 @@ const client = createClient({
   useCdn: false,
 });
 
+/** Sub-section ids are derived from the group name; see scripts/subcategories.ts. */
+function slug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
 const CONTENT_TYPES: Record<string, string> = {
   ".svg": "image/svg+xml",
   ".png": "image/png",
@@ -109,6 +120,7 @@ async function seed() {
   });
 
   let itemCount = 0;
+  let subcategoryCount = 0;
 
   for (const [sectionIndex, category] of menuCategories.entries()) {
     tx.createOrReplace({
@@ -124,6 +136,28 @@ async function seed() {
       order: sectionIndex + 1,
       hidden: false,
     });
+
+    // One sub-section document per distinct group name in this section, in the
+    // order the groups first appear. Ids match the migration script's scheme,
+    // so seeding and migrating converge on the same documents.
+    const subcategoryIds = new Map<string, string>();
+
+    for (const dish of category.dishes) {
+      if (!dish.groupEn || subcategoryIds.has(dish.groupEn)) continue;
+
+      const id = `${category._id}-sub-${slug(dish.groupEn)}`;
+      subcategoryIds.set(dish.groupEn, id);
+      subcategoryCount += 1;
+
+      tx.createOrReplace({
+        _id: id,
+        _type: "subcategory",
+        titleEn: dish.groupEn,
+        titleFr: dish.groupFr || dish.groupEn,
+        category: { _type: "reference", _ref: category._id },
+        order: subcategoryIds.size,
+      });
+    }
 
     for (const [dishIndex, dish] of category.dishes.entries()) {
       let image;
@@ -150,6 +184,14 @@ async function seed() {
         groupEn: dish.groupEn,
         groupFr: dish.groupFr,
         category: { _type: "reference", _ref: category._id },
+        ...(dish.groupEn && subcategoryIds.has(dish.groupEn)
+          ? {
+              subcategory: {
+                _type: "reference",
+                _ref: subcategoryIds.get(dish.groupEn)!,
+              },
+            }
+          : {}),
         order: dishIndex + 1,
         available: true,
         ...(image ? { image } : {}),
@@ -161,7 +203,7 @@ async function seed() {
 
   await tx.commit();
   console.log(
-    `\nDone — ${menuCategories.length} sections, ${itemCount} items, settings.`,
+    `\nDone — ${menuCategories.length} sections, ${subcategoryCount} sub-sections, ${itemCount} items, settings.`,
   );
 }
 

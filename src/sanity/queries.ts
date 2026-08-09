@@ -66,7 +66,8 @@ const menuQuery = groq`*[_type == "category" && hidden != true] | order(order as
   footnoteEn,
   footnoteFr,
   "layout": coalesce(layout, "grid"),
-  "dishes": *[_type == "dish" && references(^._id)] | order(order asc) {
+  "dishes": *[_type == "dish" && category._ref == ^._id]
+    | order(coalesce(subcategory->order, 0) asc, order asc) {
     _id,
     nameEn,
     nameFr,
@@ -75,8 +76,10 @@ const menuQuery = groq`*[_type == "category" && hidden != true] | order(order as
     price,
     priceNoteEn,
     priceNoteFr,
-    groupEn,
-    groupFr,
+    // The sub-section is the source of truth; the legacy free-text group is
+    // the fallback for any item not yet migrated onto a reference.
+    "groupEn": coalesce(subcategory->titleEn, groupEn),
+    "groupFr": coalesce(subcategory->titleFr, groupFr),
     "available": coalesce(available, true),
     image
   }

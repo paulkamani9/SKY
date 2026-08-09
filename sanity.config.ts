@@ -47,7 +47,37 @@ export default defineConfig({
               ),
             S.divider(),
             S.documentTypeListItem("category").title("Menu sections"),
-            S.documentTypeListItem("dish").title("Dishes"),
+            S.documentTypeListItem("subcategory").title("Sub-sections"),
+            S.divider(),
+            // Items grouped by section, then by sub-section, so editing a
+            // group means opening one list rather than filtering 85 items.
+            S.listItem()
+              .title("Items by section")
+              .child(
+                S.documentTypeList("category")
+                  .title("Menu sections")
+                  .child((categoryId) =>
+                    S.documentList()
+                      .title("Sub-sections")
+                      .filter(
+                        '_type == "subcategory" && category._ref == $categoryId',
+                      )
+                      .params({ categoryId })
+                      .defaultOrdering([{ field: "order", direction: "asc" }])
+                      .child((subcategoryId) =>
+                        S.documentList()
+                          .title("Items")
+                          .filter(
+                            '_type == "dish" && subcategory._ref == $subcategoryId',
+                          )
+                          .params({ subcategoryId })
+                          .defaultOrdering([
+                            { field: "order", direction: "asc" },
+                          ]),
+                      ),
+                  ),
+              ),
+            S.documentTypeListItem("dish").title("All items"),
           ]),
     }),
     visionTool({ defaultApiVersion: apiVersion }),
