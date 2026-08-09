@@ -110,10 +110,28 @@ export function MenuView({ categories, settings }: Props) {
   }, [categories]);
 
   // Keep the active pill visible in the horizontal nav.
+  //
+  // This deliberately moves the strip's scrollLeft by hand rather than calling
+  // scrollIntoView on the pill. The pill sits under the sticky header, inside
+  // the `scroll-padding-top` reserved for anchor jumps, so the browser treats
+  // it as obscured and scrolls the *document* vertically to uncover it — even
+  // with block:"nearest". Since this effect fires on every section change, that
+  // yanked the page a few dozen pixels at every section boundary and made
+  // scrolling fight the guest.
   useEffect(() => {
-    navRef.current
-      ?.querySelector<HTMLElement>(`[data-nav-id="${activeId}"]`)
-      ?.scrollIntoView({ block: "nearest", inline: "center" });
+    const nav = navRef.current;
+    const pill = nav?.querySelector<HTMLElement>(`[data-nav-id="${activeId}"]`);
+    if (!nav || !pill) return;
+
+    const navRect = nav.getBoundingClientRect();
+    const pillRect = pill.getBoundingClientRect();
+    const delta =
+      pillRect.left - navRect.left - (nav.clientWidth - pillRect.width) / 2;
+
+    // Sub-pixel deltas would fire a scroll on every frame for no visible gain.
+    if (Math.abs(delta) < 1) return;
+
+    nav.scrollBy({ left: delta, behavior: "smooth" });
   }, [activeId]);
 
   const jumpTo = (id: string) => {
