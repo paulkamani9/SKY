@@ -104,13 +104,11 @@ function resolveDish(raw: RawDish): Dish {
   return {
     ...rest,
     price,
-    imageUrl: urlFor(image!)
-      .width(600)
-      .height(450)
-      .fit("crop")
-      .quality(72)
-      .auto("format")
-      .url(),
+    // Width only, no height/crop. Forcing a 4:3 box here cut into every photo
+    // — a cut-out lost its edges and a tall shot lost its subject — and the
+    // grid does not need it: the tile is square and the image is drawn with
+    // object-contain, so whatever shape arrives is shown whole.
+    imageUrl: urlFor(image!).width(600).quality(72).auto("format").url(),
     imageUrlLarge: urlFor(image!).width(1400).quality(80).auto("format").url(),
   };
 }
