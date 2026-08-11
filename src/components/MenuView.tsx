@@ -9,93 +9,6 @@ import type { Category, Dish, Lang, Settings } from "@/sanity/queries";
 
 const LANG_KEY = "menu-lang";
 
-/*
- * Optical sizing for the grid.
- *
- * Cut-outs arrive with wildly different amounts of empty space around the
- * subject — measured across the uploaded set, painted area ran from 11% of the
- * frame (Salted Caramel) to 75% (Grapefruit), a 6.5x spread that reads as some
- * items being far bigger than others even though every tile is the same size.
- * Fitting by box does not fix it: a disc fills its bounding box, a pineapple
- * does not.
- *
- * So each image is measured once — drawn small, opaque pixels counted — and
- * scaled so every subject paints roughly the same share of its tile. Area
- * scales with the square of the linear scale, hence the sqrt.
- */
-const TARGET_COVERAGE = 0.38;
-const MIN_SCALE = 0.7;
-const MAX_SCALE = 1.7;
-/** No subject may span more than this share of its tile, so none is clipped. */
-const FILL_LIMIT = 0.94;
-
-/** Measured scale per image URL — survives flips and re-renders. */
-const scaleCache = new Map<string, number>();
-
-type Measurement = {
-  /** Painted share of the tile, 0–1. */
-  coverage: number;
-  /** Longest side of the painted bounding box, as a share of the tile. */
-  extent: number;
-};
-
-async function measureCoverage(src: string): Promise<Measurement | null> {
-  const probe = new Image();
-  // Sanity's CDN allows this; without it the canvas is tainted and unreadable.
-  probe.crossOrigin = "anonymous";
-  probe.src = src;
-
-  try {
-    await probe.decode();
-    const size = 64;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx || !probe.naturalWidth || !probe.naturalHeight) return null;
-
-    // Same fit the tile uses, so the measurement matches what is displayed.
-    const ratio = Math.min(
-      size / probe.naturalWidth,
-      size / probe.naturalHeight,
-    );
-    const w = probe.naturalWidth * ratio;
-    const h = probe.naturalHeight * ratio;
-    ctx.drawImage(probe, (size - w) / 2, (size - h) / 2, w, h);
-
-    const { data } = ctx.getImageData(0, 0, size, size);
-    let painted = 0;
-    let minX = size;
-    let minY = size;
-    let maxX = -1;
-    let maxY = -1;
-
-    // Alpha only: a photo cut out on transparency is what we are sizing.
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] <= 16) continue;
-      painted += 1;
-      const px = (i - 3) / 4;
-      const x = px % size;
-      const y = (px - x) / size;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-
-    if (maxX < 0) return null;
-
-    return {
-      coverage: painted / (size * size),
-      extent: Math.max(maxX - minX + 1, maxY - minY + 1) / size,
-    };
-  } catch {
-    // Cross-origin refusal, decode failure, an opaque photo — leave it alone.
-    return null;
-  }
-}
-
 type Props = {
   categories: Category[];
   settings: Settings | null;
@@ -544,44 +457,9 @@ function DishCard({
   hidePrice: boolean;
 }) {
   const [flipped, setFlipped] = useState(false);
-  const src = dish.imageUrl;
-  const [scale, setScale] = useState(() =>
-    src ? (scaleCache.get(src) ?? 1) : 1,
-  );
-
-  useEffect(() => {
-    if (!src) return;
-
-    const cached = scaleCache.get(src);
-    if (cached !== undefined) {
-      setScale(cached);
-      return;
-    }
-
-    let live = true;
-
-    measureCoverage(src).then((m) => {
-      // An unmeasurable image keeps its natural size.
-      let next = 1;
-
-      if (m && m.coverage > 0.01) {
-        // A tall, thin subject — a sundae glass — has little painted area but
-        // already spans the tile, so equalising area alone would push it past
-        // the edge and crop it. Its own bounds are the ceiling.
-        const fits = FILL_LIMIT / m.extent;
-        next = Math.sqrt(TARGET_COVERAGE / m.coverage);
-        next = Math.min(next, MAX_SCALE, fits);
-        next = Math.max(next, MIN_SCALE);
-      }
-
-      scaleCache.set(src, next);
-      if (live) setScale(next);
-    });
-
-    return () => {
-      live = false;
-    };
-  }, [src]);
+  // Measured on the server so the first paint is already the right size — see
+  // lib/imageScale for why this is not done in the browser.
+  const scale = dish.imageScale ?? 1;
 
   const name = pick(lang, dish.nameEn, dish.nameFr);
   const description = pick(lang, dish.descriptionEn, dish.descriptionFr);

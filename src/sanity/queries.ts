@@ -1,5 +1,7 @@
 import { groq } from "next-sanity";
 
+import { imageScales } from "@/lib/imageScale";
+
 import { client, urlFor } from "./client";
 
 export type Lang = "en" | "fr";
@@ -27,6 +29,11 @@ export type Dish = {
   available: boolean;
   imageUrl: string | null;
   imageUrlLarge: string | null;
+  /**
+   * Linear scale that evens out how much of its tile each cut-out paints.
+   * Measured on the server; 1 means "leave it alone". See lib/imageScale.
+   */
+  imageScale?: number;
 };
 
 export type Category = {
@@ -93,7 +100,27 @@ function hasAsset(image: SanityImage | undefined): boolean {
   return Boolean(image?.asset?._ref);
 }
 
-function resolveDish(raw: RawDish): Dish {
+/**
+ * A 64px PNG of the same image, used only for measuring.
+ *
+ * Width only — deliberately. Asking for width AND height requests a square,
+ * and Sanity honours that by cropping a square out of a non-square asset
+ * (`?rect=0,308,528,528` on a 528x1143 sundae). The probe then measured a
+ * zoomed crop while the tile displayed the whole image, so tall subjects were
+ * read as far larger than they render and never got scaled up. This must stay
+ * in step with imageUrl's geometry below.
+ *
+ * PNG because the measurement is of the alpha channel — auto("format") would
+ * happily serve a JPEG and flatten every cut-out onto opaque white.
+ */
+function probeUrl(image: SanityImage): string {
+  return urlFor(image!).width(64).format("png").url();
+}
+
+/** A dish plus the throwaway URL used to measure it. */
+type ResolvedDish = Dish & { probe?: string };
+
+function resolveDish(raw: RawDish): ResolvedDish {
   const { image, ...rest } = raw;
   const price = typeof rest.price === "number" ? rest.price : null;
 
@@ -104,6 +131,7 @@ function resolveDish(raw: RawDish): Dish {
   return {
     ...rest,
     price,
+    probe: probeUrl(image!),
     // Width only, no height/crop. Forcing a 4:3 box here cut into every photo
     // — a cut-out lost its edges and a tall shot lost its subject — and the
     // grid does not need it: the tile is square and the image is drawn with
@@ -122,7 +150,27 @@ export async function getMenu(): Promise<Category[]> {
       {},
       { next: { revalidate: 60 } },
     );
-    return (raw ?? []).map((c) => ({ ...c, dishes: c.dishes.map(resolveDish) }));
+
+    const categories = (raw ?? []).map((c) => ({
+      ...c,
+      dishes: c.dishes.map(resolveDish),
+    }));
+
+    // Measure every cut-out once per revalidation, then hand the browser a
+    // plain number. Scales are cached by URL, so in practice this only does
+    // work for images that changed since the last render.
+    const probes = categories.flatMap((c) =>
+      c.dishes.map((d) => d.probe).filter((p): p is string => Boolean(p)),
+    );
+    const scales = await imageScales(probes);
+
+    return categories.map((c) => ({
+      ...c,
+      dishes: c.dishes.map(({ probe, ...dish }) => ({
+        ...dish,
+        imageScale: probe ? (scales.get(probe) ?? 1) : 1,
+      })),
+    }));
   } catch (error) {
     console.error("Failed to load menu from Sanity", error);
     return [];
