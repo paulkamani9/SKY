@@ -632,6 +632,7 @@ function DishRow({
       style={
         divided ? { borderTop: "1px solid var(--gold-line-soft)" } : undefined
       }
+      
     >
       <button
         type="button"

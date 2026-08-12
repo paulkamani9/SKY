@@ -100,7 +100,7 @@ export const dish = defineType({
       title: "Available today",
       type: "boolean",
       description:
-        "Turn off when it runs out. The item shows as sold out instead of disappearing.",
+        "Turn off when it runs out and the item disappears from the menu. It stays here — turn it back on to bring it back.",
       initialValue: true,
     }),
   ],

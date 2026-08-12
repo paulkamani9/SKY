@@ -61,8 +61,10 @@ export const subcategory = defineType({
       order: "order",
     },
     prepare: ({ title, section, order }) => ({
+      // "in Coffee" rather than the bare section name, so this list cannot be
+      // mistaken for the Menu sections list it sits next to.
       title: `${order}. ${title}`,
-      subtitle: section ?? "No section",
+      subtitle: section ? `in ${section}` : "Not in a section",
     }),
   },
 });

@@ -73,7 +73,11 @@ const menuQuery = groq`*[_type == "category" && hidden != true] | order(order as
   footnoteEn,
   footnoteFr,
   "layout": coalesce(layout, "grid"),
-  "dishes": *[_type == "dish" && category._ref == ^._id]
+  // Unavailable items are dropped here rather than styled as sold out, so a
+  // guest never reads about something they cannot order. They stay in the
+  // Studio untouched — flipping "Available today" back on restores them.
+  // "!= false" rather than "== true" so items predating the field still show.
+  "dishes": *[_type == "dish" && category._ref == ^._id && available != false]
     | order(coalesce(subcategory->order, 0) asc, order asc) {
     _id,
     nameEn,
