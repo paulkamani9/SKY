@@ -18,8 +18,17 @@ import sharp from "sharp";
  * only sends CORS headers for origins on the project allowlist, so the canvas
  * was tainted everywhere else and every image fell back to natural size.
  * Server-side there is no origin to allow, and the browser ships zero decodes.
+ *
+ * The target was 0.38 while every image was a small cut-out on a large
+ * transparent margin. Top-down plates broke that: a plate is a solid disc, so
+ * it measures 0.59-0.64 coverage against a gelato scoop's 0.12-0.52, and
+ * equalising area *shrank* the plates to 0.77-0.80 — they read smaller than
+ * the gelato beside them, which is backwards. At 0.68 every subject in the
+ * current library is instead governed by FILL_LIMIT below, so all of them span
+ * ~94% of their tile. If a future image looks too aggressive at that size,
+ * lower FILL_LIMIT rather than this: it is the one now doing the work.
  */
-const TARGET_COVERAGE = 0.38;
+const TARGET_COVERAGE = 0.68;
 const MIN_SCALE = 0.7;
 const MAX_SCALE = 1.7;
 /** No subject may span more than this share of its tile, so none is clipped. */
