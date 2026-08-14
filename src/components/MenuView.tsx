@@ -335,6 +335,67 @@ export function MenuView({ categories, settings }: Props) {
   );
 }
 
+/**
+ * Sections that lead with a full-bleed photo instead of a bare heading.
+ *
+ * Keyed by titleEn because a category has no slug. The source is a 5472x3040
+ * JPEG the owner supplied; it is pre-resized into public/banners rather than
+ * served raw, which took it from 4.3MB to 96KB at the widest size.
+ */
+const SECTION_BANNERS: Record<string, { base: string; alt: string }> = {
+  Smoothies: {
+    base: "/banners/smoothies",
+    alt: "Two tropical smoothies on a beach bar overlooking the sea",
+  },
+};
+
+const BANNER_WIDTHS = [800, 1400, 2000];
+
+/**
+ * Photo behind a section's heading. The heading sits over the lower third,
+ * where a scrim fades the picture into the page background — so the gold script
+ * keeps its contrast no matter how bright the sky in the photo is, and the
+ * banner reads as part of the page rather than a pasted-in rectangle.
+ */
+function SectionBanner({
+  banner,
+  children,
+}: {
+  banner: { base: string; alt: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative -mx-4 overflow-hidden sm:mx-0 sm:rounded-2xl">
+      <img
+        src={`${banner.base}-1400.webp`}
+        srcSet={BANNER_WIDTHS.map((w) => `${banner.base}-${w}.webp ${w}w`).join(", ")}
+        sizes="(min-width: 1024px) 1024px, 100vw"
+        alt={banner.alt}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      {/* Opaque at the foot so the photo resolves into the page gradient, and
+          only a light wash up top so the sea stays visible. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to top, var(--bg) 6%, rgb(1 65 79 / 0.88) 34%, rgb(1 65 79 / 0.18) 100%)",
+        }}
+      />
+      {/* The gold script can land on open sky or bright sea depending on the
+          crop, where the scrim alone is not enough to hold it. */}
+      <div
+        className="relative px-4 pt-36 pb-4 sm:px-6 sm:pt-52"
+        style={{ textShadow: "0 2px 12px rgb(1 32 39 / 0.75)" }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function SectionBlock({
   category,
   lang,
@@ -354,9 +415,10 @@ function SectionBlock({
   const intro = pick(lang, category.introEn, category.introFr);
   const footnote = pick(lang, category.footnoteEn, category.footnoteFr);
   const isGrid = category.layout !== "list";
+  const banner = SECTION_BANNERS[category.titleEn];
 
-  return (
-    <section id={`section-${category._id}`} className="scroll-mt-36 pt-9">
+  const heading = (
+    <>
       <h2
         className="script-heading text-[30px] leading-tight font-semibold"
         style={{ color: "var(--gold)" }}
@@ -373,6 +435,16 @@ function SectionBlock({
           {intro}
         </p>
       ) : null}
+    </>
+  );
+
+  return (
+    <section id={`section-${category._id}`} className="scroll-mt-36 pt-9">
+      {banner ? (
+        <SectionBanner banner={banner}>{heading}</SectionBanner>
+      ) : (
+        heading
+      )}
 
       {groups.map((group) => (
         <div key={group.key || "ungrouped"}>
@@ -539,6 +611,13 @@ function DishCard({
             <div className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden]">
               <img
                 src={dish.imageUrl}
+                srcSet={dish.imageSrcSet ?? undefined}
+                // The grid is 2 / 3 / 4 columns, so a tile is roughly 50 / 33 /
+                // 25vw — but the cut-out is then magnified by `scale`, and CSS
+                // scaling adds no pixels. Widening the hint by the same factor
+                // is what makes an upscaled tile pick a source big enough to
+                // stay sharp on a DPR-3 phone.
+                sizes={`(min-width: 1024px) ${Math.ceil(25 * scale)}vw, (min-width: 640px) ${Math.ceil(33 * scale)}vw, ${Math.ceil(50 * scale)}vw`}
                 alt=""
                 loading="lazy"
                 decoding="async"

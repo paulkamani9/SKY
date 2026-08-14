@@ -30,6 +30,13 @@ export type Dish = {
   imageUrl: string | null;
   imageUrlLarge: string | null;
   /**
+   * Candidate widths for the tile, so a phone can pick a sharp one. A single
+   * 600px source was not enough: the tile magnifies each cut-out with a CSS
+   * `scale()`, which adds no pixels, so an item at 1.7x needed ~834 device px
+   * on a DPR-3 phone and got 600. See DishCard for the matching `sizes`.
+   */
+  imageSrcSet?: string | null;
+  /**
    * Linear scale that evens out how much of its tile each cut-out paints.
    * Measured on the server; 1 means "leave it alone". See lib/imageScale.
    */
@@ -121,6 +128,14 @@ function probeUrl(image: SanityImage): string {
   return urlFor(image!).width(64).format("png").url();
 }
 
+/**
+ * Tile widths offered to the browser. Width only, for the same reason as the
+ * probe above: adding a height would make Sanity crop a square out of a tall
+ * asset. The top end covers a 2-column phone grid at DPR 3 with a cut-out
+ * scaled up to MAX_SCALE.
+ */
+const TILE_WIDTHS = [400, 600, 900, 1200];
+
 /** A dish plus the throwaway URL used to measure it. */
 type ResolvedDish = Dish & { probe?: string };
 
@@ -141,6 +156,9 @@ function resolveDish(raw: RawDish): ResolvedDish {
     // grid does not need it: the tile is square and the image is drawn with
     // object-contain, so whatever shape arrives is shown whole.
     imageUrl: urlFor(image!).width(600).quality(72).auto("format").url(),
+    imageSrcSet: TILE_WIDTHS.map(
+      (w) => `${urlFor(image!).width(w).quality(72).auto("format").url()} ${w}w`,
+    ).join(", "),
     imageUrlLarge: urlFor(image!).width(1400).quality(80).auto("format").url(),
   };
 }
