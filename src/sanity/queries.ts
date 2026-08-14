@@ -52,6 +52,9 @@ export type Category = {
   footnoteEn?: string;
   footnoteFr?: string;
   layout: Layout;
+  /** Widths for the section banner, or null when the section has no photo. */
+  bannerSrcSet?: string | null;
+  bannerUrl?: string | null;
   dishes: Dish[];
 };
 
@@ -68,7 +71,10 @@ export type Settings = {
 type SanityImage = { asset?: { _ref?: string } } | null;
 
 type RawDish = Omit<Dish, "imageUrl" | "imageUrlLarge"> & { image?: SanityImage };
-type RawCategory = Omit<Category, "dishes"> & { dishes: RawDish[] };
+type RawCategory = Omit<Category, "dishes" | "bannerSrcSet" | "bannerUrl"> & {
+  dishes: RawDish[];
+  banner?: SanityImage;
+};
 type RawSettings = Omit<Settings, "logoUrl"> & { logo?: SanityImage };
 
 const menuQuery = groq`*[_type == "category" && hidden != true] | order(order asc) {
@@ -79,6 +85,7 @@ const menuQuery = groq`*[_type == "category" && hidden != true] | order(order as
   introFr,
   footnoteEn,
   footnoteFr,
+  banner,
   "layout": coalesce(layout, "grid"),
   // Unavailable items are dropped here rather than styled as sold out, so a
   // guest never reads about something they cannot order. They stay in the
@@ -136,6 +143,24 @@ function probeUrl(image: SanityImage): string {
  */
 const TILE_WIDTHS = [400, 600, 900, 1200];
 
+/**
+ * Banner widths. Wider than the tile set because a banner spans the full
+ * viewport on a phone and the whole container on desktop, so it needs a
+ * retina-sized source at the top end.
+ */
+const BANNER_WIDTHS = [800, 1400, 2000];
+
+function resolveBanner(banner?: SanityImage) {
+  if (!hasAsset(banner)) return { bannerUrl: null, bannerSrcSet: null };
+
+  return {
+    bannerUrl: urlFor(banner!).width(1400).quality(76).auto("format").url(),
+    bannerSrcSet: BANNER_WIDTHS.map(
+      (w) => `${urlFor(banner!).width(w).quality(76).auto("format").url()} ${w}w`,
+    ).join(", "),
+  };
+}
+
 /** A dish plus the throwaway URL used to measure it. */
 type ResolvedDish = Dish & { probe?: string };
 
@@ -173,8 +198,9 @@ export async function getMenu(): Promise<Category[]> {
       { next: { revalidate: 60 } },
     );
 
-    const categories = (raw ?? []).map((c) => ({
+    const categories = (raw ?? []).map(({ banner, ...c }) => ({
       ...c,
+      ...resolveBanner(banner),
       dishes: c.dishes.map(resolveDish),
     }));
 

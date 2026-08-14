@@ -46,6 +46,14 @@ export const category = defineType({
       rows: 2,
     }),
     defineField({
+      name: "banner",
+      title: "Section banner",
+      type: "image",
+      description:
+        "Wide photo behind the section heading. Landscape, at least 2000px wide — the title sits over the lower third, so keep that area free of anything important. Optional: without one the section just shows its heading.",
+      options: { hotspot: true },
+    }),
+    defineField({
       name: "layout",
       title: "Layout",
       type: "string",

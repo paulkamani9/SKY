@@ -336,41 +336,32 @@ export function MenuView({ categories, settings }: Props) {
 }
 
 /**
- * Sections that lead with a full-bleed photo instead of a bare heading.
- *
- * Keyed by titleEn because a category has no slug. The source is a 5472x3040
- * JPEG the owner supplied; it is pre-resized into public/banners rather than
- * served raw, which took it from 4.3MB to 96KB at the widest size.
- */
-const SECTION_BANNERS: Record<string, { base: string; alt: string }> = {
-  Smoothies: {
-    base: "/banners/smoothies",
-    alt: "Two tropical smoothies on a beach bar overlooking the sea",
-  },
-};
-
-const BANNER_WIDTHS = [800, 1400, 2000];
-
-/**
  * Photo behind a section's heading. The heading sits over the lower third,
  * where a scrim fades the picture into the page background — so the gold script
  * keeps its contrast no matter how bright the sky in the photo is, and the
  * banner reads as part of the page rather than a pasted-in rectangle.
+ *
+ * A fixed height rather than an aspect ratio: every section gets the same band
+ * whatever shape its photo is, so scrolling the menu does not lurch.
  */
 function SectionBanner({
-  banner,
+  src,
+  srcSet,
+  alt,
   children,
 }: {
-  banner: { base: string; alt: string };
+  src: string;
+  srcSet?: string | null;
+  alt: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="relative -mx-4 overflow-hidden sm:mx-0 sm:rounded-2xl">
       <img
-        src={`${banner.base}-1400.webp`}
-        srcSet={BANNER_WIDTHS.map((w) => `${banner.base}-${w}.webp ${w}w`).join(", ")}
+        src={src}
+        srcSet={srcSet ?? undefined}
         sizes="(min-width: 1024px) 1024px, 100vw"
-        alt={banner.alt}
+        alt={alt}
         loading="lazy"
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover"
@@ -387,7 +378,7 @@ function SectionBanner({
       {/* The gold script can land on open sky or bright sea depending on the
           crop, where the scrim alone is not enough to hold it. */}
       <div
-        className="relative px-4 pt-36 pb-4 sm:px-6 sm:pt-52"
+        className="relative px-4 pt-24 pb-4 sm:px-6 sm:pt-32"
         style={{ textShadow: "0 2px 12px rgb(1 32 39 / 0.75)" }}
       >
         {children}
@@ -415,7 +406,7 @@ function SectionBlock({
   const intro = pick(lang, category.introEn, category.introFr);
   const footnote = pick(lang, category.footnoteEn, category.footnoteFr);
   const isGrid = category.layout !== "list";
-  const banner = SECTION_BANNERS[category.titleEn];
+  const bannerUrl = category.bannerUrl;
 
   const heading = (
     <>
@@ -440,8 +431,15 @@ function SectionBlock({
 
   return (
     <section id={`section-${category._id}`} className="scroll-mt-36 pt-9">
-      {banner ? (
-        <SectionBanner banner={banner}>{heading}</SectionBanner>
+      {bannerUrl ? (
+        <SectionBanner
+          src={bannerUrl}
+          srcSet={category.bannerSrcSet}
+          // Decorative: the heading it sits behind already names the section.
+          alt=""
+        >
+          {heading}
+        </SectionBanner>
       ) : (
         heading
       )}
