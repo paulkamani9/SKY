@@ -100,10 +100,6 @@ body {
   overflow: hidden;
   pointer-events: none;
 }
-.sky-veil-top {
-  top: 0;
-  height: 52vh;
-}
 .sky-veil-bottom {
   bottom: 0;
   height: 44vh;
@@ -122,16 +118,6 @@ body {
   will-change: transform;
 }
 
-.sky-veil-top .sky-cloud {
-  /* Softest at the very top, gone by the time the first section arrives. */
-  mask-image: linear-gradient(180deg, #000 0%, #000 30%, transparent 100%);
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    #000 0%,
-    #000 30%,
-    transparent 100%
-  );
-}
 .sky-veil-bottom .sky-cloud {
   mask-image: linear-gradient(0deg, #000 0%, #000 26%, transparent 100%);
   -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 26%, transparent 100%);

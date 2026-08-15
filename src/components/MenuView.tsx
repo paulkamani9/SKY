@@ -182,12 +182,9 @@ export function MenuView({ categories, settings }: Props) {
   const tagline = pick(lang, settings?.taglineEn, settings?.taglineFr);
   return (
     <>
-      {/* Scenery, behind everything. Two bands so the menu eases out of sky at
-          the top and back into it at the foot of the page. */}
-      <div className="sky-veil sky-veil-top" aria-hidden="true">
-        <div className="sky-cloud sky-cloud-a" />
-        <div className="sky-cloud sky-cloud-b" />
-      </div>
+      {/* Scenery, behind everything, at the foot of the page only. The head of
+          the page has the first section's banner for its sky; haze on top of
+          that was noise stacked on noise. */}
       <div className="sky-veil sky-veil-bottom" aria-hidden="true">
         <div className="sky-cloud sky-cloud-a" />
         <div className="sky-cloud sky-cloud-b" />
@@ -313,10 +310,11 @@ export function MenuView({ categories, settings }: Props) {
           </p>
         ) : null}
 
-        {categories.map((c) => (
+        {categories.map((c, i) => (
           <SectionBlock
             key={c._id}
             category={c}
+            isFirst={i === 0}
             lang={lang}
             currency={currency}
             onOpen={setOpenDish}
@@ -450,8 +448,12 @@ function SectionBlock({
   lang,
   currency,
   onOpen,
+  isFirst,
 }: {
   category: Category;
+  /** The opening section runs flush to the header, so its banner is the first
+      thing a guest sees instead of a strip of empty page above it. */
+  isFirst?: boolean;
   lang: Lang;
   currency: string;
   onOpen: (dish: Dish) => void;
@@ -488,7 +490,10 @@ function SectionBlock({
   );
 
   return (
-    <section id={`section-${category._id}`} className="scroll-mt-36 pt-9">
+    <section
+      id={`section-${category._id}`}
+      className={`scroll-mt-36 ${isFirst ? "" : "pt-9"}`}
+    >
       {bannerUrl ? (
         <SectionBanner
           src={bannerUrl}
