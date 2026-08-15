@@ -7,6 +7,7 @@ export const strings = {
     close: "Close",
     sections: "Menu sections",
     empty: "The menu is being updated. Please ask a member of staff.",
+    builtBy: "Menu by",
   },
   fr: {
     soldOut: "Épuisé",
@@ -15,6 +16,7 @@ export const strings = {
     sections: "Sections de la carte",
     empty:
       "La carte est en cours de mise à jour. Merci de demander au personnel.",
+    builtBy: "Carte réalisée par",
   },
 } satisfies Record<Lang, Record<string, string>>;
 

@@ -180,10 +180,19 @@ export function MenuView({ categories, settings }: Props) {
   };
 
   const tagline = pick(lang, settings?.taglineEn, settings?.taglineFr);
-  const notice = pick(lang, settings?.noticeEn, settings?.noticeFr);
-
   return (
     <>
+      {/* Scenery, behind everything. Two bands so the menu eases out of sky at
+          the top and back into it at the foot of the page. */}
+      <div className="sky-veil sky-veil-top" aria-hidden="true">
+        <div className="sky-cloud sky-cloud-a" />
+        <div className="sky-cloud sky-cloud-b" />
+      </div>
+      <div className="sky-veil sky-veil-bottom" aria-hidden="true">
+        <div className="sky-cloud sky-cloud-a" />
+        <div className="sky-cloud sky-cloud-b" />
+      </div>
+
       <header
         className="sticky top-0 z-30 border-b backdrop-blur-md"
         style={{
@@ -236,7 +245,7 @@ export function MenuView({ categories, settings }: Props) {
                   type="button"
                   onClick={() => changeLang(code)}
                   aria-pressed={isActive}
-                  className="rounded-full px-3 py-1.5 uppercase transition"
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 uppercase transition"
                   style={{
                     background: isActive
                       ? "linear-gradient(140deg, var(--blue) 0%, var(--green) 100%)"
@@ -247,6 +256,11 @@ export function MenuView({ categories, settings }: Props) {
                       : "none",
                   }}
                 >
+                  <Flag
+                    code={code}
+                    // Inactive flags sit back so the chosen one reads first.
+                    className={isActive ? "opacity-100" : "opacity-60"}
+                  />
                   {code}
                 </button>
               );
@@ -290,19 +304,6 @@ export function MenuView({ categories, settings }: Props) {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pb-[max(3.5rem,env(safe-area-inset-bottom))]">
-        {notice ? (
-          <p
-            className="mt-5 rounded-xl px-4 py-3 text-[13px] leading-relaxed"
-            style={{
-              background: "var(--surface-2)",
-              border: "1px solid var(--gold-line-soft)",
-              color: "var(--muted)",
-            }}
-          >
-            {notice}
-          </p>
-        ) : null}
-
         {categories.length === 0 ? (
           <p
             className="mt-20 text-center text-sm"
@@ -321,6 +322,22 @@ export function MenuView({ categories, settings }: Props) {
             onOpen={setOpenDish}
           />
         ))}
+
+        <footer className="mt-14 pb-2 text-center">
+          <div className="gold-rule mx-auto h-px w-24 opacity-50" />
+          <p className="mt-5 text-[12px]" style={{ color: "var(--muted-dim)" }}>
+            {t(lang, "builtBy")}{" "}
+            <a
+              href="https://paulkamani9.github.io/paulkamani/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80"
+              style={{ color: "var(--gold)" }}
+            >
+              Paul Kamani
+            </a>
+          </p>
+        </footer>
       </main>
 
       {openDish ? (
@@ -332,6 +349,44 @@ export function MenuView({ categories, settings }: Props) {
         />
       ) : null}
     </>
+  );
+}
+
+/**
+ * Flags for the language toggle, drawn rather than set as emoji: the flag
+ * emoji render as bare "GB"/"FR" letters on Windows and on some Androids,
+ * which is exactly the audience least likely to forgive it.
+ */
+function Flag({ code, className }: { code: "en" | "fr"; className?: string }) {
+  const shared = `h-3 w-[18px] shrink-0 rounded-[2px] ${className ?? ""}`;
+  const ring = { boxShadow: "0 0 0 1px rgb(1 32 39 / 0.35)" };
+
+  if (code === "fr") {
+    return (
+      <svg viewBox="0 0 60 30" className={shared} style={ring} aria-hidden="true">
+        <rect width="20" height="30" fill="#002395" />
+        <rect x="20" width="20" height="30" fill="#ffffff" />
+        <rect x="40" width="20" height="30" fill="#ED2939" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 60 30" className={shared} style={ring} aria-hidden="true">
+      <clipPath id="flag-uk-quarters">
+        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z" />
+      </clipPath>
+      <rect width="60" height="30" fill="#012169" />
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#ffffff" strokeWidth="6" />
+      <path
+        d="M0,0 L60,30 M60,0 L0,30"
+        clipPath="url(#flag-uk-quarters)"
+        stroke="#C8102E"
+        strokeWidth="4"
+      />
+      <path d="M30,0 v30 M0,15 h60" stroke="#ffffff" strokeWidth="10" />
+      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6" />
+    </svg>
   );
 }
 

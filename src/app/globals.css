@@ -76,6 +76,104 @@ body {
   overscroll-behavior-y: none;
 }
 
+/*
+ * Cloud haze at the top and foot of the page, so the menu fades in and out of
+ * open sky rather than starting and stopping at a hard edge.
+ *
+ * Fixed and z-index -1: it paints over the body gradient but under every piece
+ * of content, so nothing needs a stacking context of its own and the sticky
+ * header still sits cleanly on top. pointer-events are off throughout — this is
+ * scenery, and it must never eat a tap meant for a dish.
+ */
+.sky-veil {
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sky-veil-top {
+  top: 0;
+  height: 52vh;
+}
+.sky-veil-bottom {
+  bottom: 0;
+  height: 44vh;
+}
+
+/*
+ * Each band holds two cloud layers drifting at different speeds, which reads as
+ * depth without anything so definite that it looks like a picture of a cloud.
+ * Inset well past the edges so the drift never exposes a corner.
+ */
+.sky-cloud {
+  position: absolute;
+  inset: -25% -30%;
+  background-repeat: no-repeat;
+  animation: sky-drift 90s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.sky-veil-top .sky-cloud {
+  /* Softest at the very top, gone by the time the first section arrives. */
+  mask-image: linear-gradient(180deg, #000 0%, #000 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 30%,
+    transparent 100%
+  );
+}
+.sky-veil-bottom .sky-cloud {
+  mask-image: linear-gradient(0deg, #000 0%, #000 26%, transparent 100%);
+  -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 26%, transparent 100%);
+}
+
+.sky-cloud-a {
+  background-image:
+    radial-gradient(
+      58% 52% at 16% 26%,
+      rgb(255 255 255 / 0.13),
+      transparent 70%
+    ),
+    radial-gradient(
+      46% 44% at 54% 14%,
+      rgb(255 255 255 / 0.1),
+      transparent 72%
+    ),
+    radial-gradient(
+      62% 48% at 86% 30%,
+      rgb(255 255 255 / 0.09),
+      transparent 70%
+    );
+}
+.sky-cloud-b {
+  /* Tinted toward the pale sky blue, half speed, drifting the other way. */
+  background-image:
+    radial-gradient(
+      52% 46% at 34% 42%,
+      color-mix(in srgb, var(--sky-3) 22%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      56% 44% at 74% 52%,
+      color-mix(in srgb, var(--sky-2) 16%, transparent),
+      transparent 74%
+    );
+  animation-duration: 150s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes sky-drift {
+  from {
+    transform: translate3d(-2.5%, 0, 0);
+  }
+  to {
+    transform: translate3d(2.5%, 0, 0);
+  }
+}
+
 /* Horizontal section nav scrolls without a visible scrollbar. */
 .no-scrollbar {
   scrollbar-width: none;
@@ -144,6 +242,10 @@ body {
   .sky-wordmark {
     animation: none;
     background-position: 50% 0;
+  }
+  /* The haze stays; only its drift stops. */
+  .sky-cloud {
+    animation: none;
   }
   *,
   *::before,
