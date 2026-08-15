@@ -73,8 +73,11 @@ export function MenuView({ categories, settings }: Props) {
   const [lang, setLang] = useState<Lang>("en");
   const [activeId, setActiveId] = useState<string>(categories[0]?._id ?? "");
   const [openDish, setOpenDish] = useState<Dish | null>(null);
+  // Drives the header's fade from transparent-over-hero to its solid bar.
+  const [scrolled, setScrolled] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   // Set while a nav tap is scrolling, so the spy doesn't fight the jump.
   const lockedUntil = useRef(0);
 
@@ -109,6 +112,9 @@ export function MenuView({ categories, settings }: Props) {
 
     const update = () => {
       frame = 0;
+      // Ahead of the nav lock: the header's own state should keep tracking the
+      // scroll even while a section jump is animating.
+      setScrolled(window.scrollY > 8);
       if (Date.now() < lockedUntil.current) return;
 
       const line = 150;
@@ -146,6 +152,33 @@ export function MenuView({ categories, settings }: Props) {
     };
   }, [categories]);
 
+  /*
+   * Publish the header's height as --header-h.
+   *
+   * The hero banner is pulled up behind the header by exactly this much and
+   * pads its heading down by the same amount, so the picture starts at the very
+   * top of the page while the title still clears the bar. It cannot be a
+   * constant: the header grows and shrinks with the logo, the tagline, and
+   * whether the section nav wraps — and it changes again when the guest zooms,
+   * which this menu explicitly allows.
+   */
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const publish = () => {
+      document.documentElement.style.setProperty(
+        "--header-h",
+        `${Math.round(el.getBoundingClientRect().height)}px`,
+      );
+    };
+
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [categories.length, lang]);
+
   // Keep the active pill visible in the horizontal nav.
   //
   // This deliberately moves the strip's scrollLeft by hand rather than calling
@@ -180,6 +213,13 @@ export function MenuView({ categories, settings }: Props) {
   };
 
   const tagline = pick(lang, settings?.taglineEn, settings?.taglineFr);
+
+  // The opening section's photo runs the full height of the page behind the
+  // header. Without a banner there is nothing to show through, so the header
+  // keeps its solid bar from the start.
+  const hasHero = Boolean(categories[0]?.bannerUrl);
+  const overHero = hasHero && !scrolled;
+
   return (
     <>
       {/* Scenery, behind everything, at the foot of the page only. The head of
@@ -191,10 +231,19 @@ export function MenuView({ categories, settings }: Props) {
       </div>
 
       <header
-        className="sticky top-0 z-30 border-b backdrop-blur-md"
+        ref={headerRef}
+        className="sticky top-0 z-30 border-b transition-colors duration-300"
         style={{
-          borderColor: "var(--gold-line)",
-          background: "color-mix(in srgb, var(--bg-top) 88%, transparent)",
+          borderColor: overHero ? "transparent" : "var(--gold-line)",
+          background: overHero
+            ? "transparent"
+            : "color-mix(in srgb, var(--bg-top) 88%, transparent)",
+          // Blur would soften the hero photo directly under the bar, which is
+          // the one part of it a guest looks at first.
+          backdropFilter: overHero ? "none" : "blur(12px)",
+          WebkitBackdropFilter: overHero ? "none" : "blur(12px)",
+          // Over a bright sky the wordmark and pills need their own weight.
+          textShadow: overHero ? "0 1px 10px rgb(1 32 39 / 0.55)" : undefined,
         }}
       >
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 pt-[max(0.7rem,env(safe-area-inset-top))] pb-2.5">
@@ -314,6 +363,7 @@ export function MenuView({ categories, settings }: Props) {
           <SectionBlock
             key={c._id}
             category={c}
+            hero={i === 0 && hasHero}
             isFirst={i === 0}
             lang={lang}
             currency={currency}
@@ -404,15 +454,23 @@ function SectionBanner({
   src,
   srcSet,
   alt,
+  hero,
   children,
 }: {
   src: string;
   srcSet?: string | null;
   alt: string;
+  hero?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative -mx-4 overflow-hidden sm:mx-0 sm:rounded-2xl">
+    <div
+      className={`relative -mx-4 overflow-hidden sm:mx-0 ${
+        // The hero meets the top of the page, so rounding it there would leave
+        // two corners of bare background under a transparent header.
+        hero ? "sm:rounded-b-2xl" : "sm:rounded-2xl"
+      }`}
+    >
       <img
         src={src}
         srcSet={srcSet ?? undefined}
@@ -431,11 +489,33 @@ function SectionBanner({
             "linear-gradient(to top, var(--bg) 6%, rgb(1 65 79 / 0.88) 34%, rgb(1 65 79 / 0.18) 100%)",
         }}
       />
+      {/* Hero only: the header sits directly on the photo with no bar of its
+          own, so the top of the picture carries the contrast for it. */}
+      {hero ? (
+        <div
+          className="absolute inset-x-0 top-0"
+          style={{
+            height: "calc(var(--header-h, 8.5rem) + 2rem)",
+            background:
+              "linear-gradient(to bottom, rgb(1 32 39 / 0.6) 0%, rgb(1 32 39 / 0.28) 55%, transparent 100%)",
+          }}
+        />
+      ) : null}
       {/* The gold script can land on open sky or bright sea depending on the
           crop, where the scrim alone is not enough to hold it. */}
       <div
         className="relative flex min-h-[15rem] flex-col justify-end px-4 pt-24 pb-4 sm:min-h-[19rem] sm:px-6 sm:pt-32"
-        style={{ textShadow: "0 2px 12px rgb(1 32 39 / 0.75)" }}
+        style={{
+          textShadow: "0 2px 12px rgb(1 32 39 / 0.75)",
+          // Give back the height the negative margin took, so the heading still
+          // clears the header and the band keeps its usual proportions.
+          ...(hero
+            ? {
+                minHeight: "calc(var(--header-h, 8.5rem) + 15rem)",
+                paddingTop: "calc(var(--header-h, 8.5rem) + 6rem)",
+              }
+            : null),
+        }}
       >
         {children}
       </div>
@@ -449,11 +529,14 @@ function SectionBlock({
   currency,
   onOpen,
   isFirst,
+  hero,
 }: {
   category: Category;
   /** The opening section runs flush to the header, so its banner is the first
       thing a guest sees instead of a strip of empty page above it. */
   isFirst?: boolean;
+  /** ...and when it has a photo, that photo runs up behind the header too. */
+  hero?: boolean;
   lang: Lang;
   currency: string;
   onOpen: (dish: Dish) => void;
@@ -493,9 +576,13 @@ function SectionBlock({
     <section
       id={`section-${category._id}`}
       className={`scroll-mt-36 ${isFirst ? "" : "pt-9"}`}
+      // Pulled up by the header's exact height so the photo starts at the top
+      // of the page rather than below the bar.
+      style={hero ? { marginTop: "calc(var(--header-h, 8.5rem) * -1)" } : undefined}
     >
       {bannerUrl ? (
         <SectionBanner
+          hero={hero}
           src={bannerUrl}
           srcSet={category.bannerSrcSet}
           // Decorative: the heading it sits behind already names the section.
