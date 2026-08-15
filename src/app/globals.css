@@ -61,6 +61,9 @@ html {
 }
 
 body {
+  /* Containing block for the sky veils, so they anchor to the ends of the
+     document rather than to the viewport. */
+  position: relative;
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -80,13 +83,17 @@ body {
  * Cloud haze at the top and foot of the page, so the menu fades in and out of
  * open sky rather than starting and stopping at a hard edge.
  *
- * Fixed and z-index -1: it paints over the body gradient but under every piece
- * of content, so nothing needs a stacking context of its own and the sticky
+ * Absolute, not fixed, and anchored to the body box rather than the viewport —
+ * these belong to the ends of the document. Fixed made them ride along with
+ * the scroll, which put cloud in the middle of the menu.
+ *
+ * z-index -1: it paints over the body gradient but under every piece of
+ * content, so nothing needs a stacking context of its own and the sticky
  * header still sits cleanly on top. pointer-events are off throughout — this is
  * scenery, and it must never eat a tap meant for a dish.
  */
 .sky-veil {
-  position: fixed;
+  position: absolute;
   right: 0;
   left: 0;
   z-index: -1;
