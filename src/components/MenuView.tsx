@@ -341,8 +341,11 @@ export function MenuView({ categories, settings }: Props) {
  * keeps its contrast no matter how bright the sky in the photo is, and the
  * banner reads as part of the page rather than a pasted-in rectangle.
  *
- * A fixed height rather than an aspect ratio: every section gets the same band
- * whatever shape its photo is, so scrolling the menu does not lurch.
+ * The band is sized by the heading it contains, not by the photo's aspect, so
+ * a 3:2 upload and a 16:9 one produce the same shape. A minimum height keeps
+ * sections with a one-line intro from sitting visibly shallower than sections
+ * with three — measured across the eleven sections the spread was 190px to
+ * 232px on a phone, enough to read as inconsistent while scrolling.
  */
 function SectionBanner({
   src,
@@ -378,7 +381,7 @@ function SectionBanner({
       {/* The gold script can land on open sky or bright sea depending on the
           crop, where the scrim alone is not enough to hold it. */}
       <div
-        className="relative px-4 pt-24 pb-4 sm:px-6 sm:pt-32"
+        className="relative flex min-h-[15rem] flex-col justify-end px-4 pt-24 pb-4 sm:min-h-[19rem] sm:px-6 sm:pt-32"
         style={{ textShadow: "0 2px 12px rgb(1 32 39 / 0.75)" }}
       >
         {children}
