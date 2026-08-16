@@ -55,6 +55,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* The hero banner breaks out of the menu column to the full viewport width
+     with a vw margin, which overshoots by the width of a classic scrollbar.
+     clip rather than hidden: hidden here would break the sticky header. */
+  overflow-x: clip;
   /* Sticky header + section nav clearance for anchor jumps. */
   scroll-padding-top: 8.5rem;
   -webkit-text-size-adjust: 100%;

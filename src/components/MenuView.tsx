@@ -465,16 +465,15 @@ function SectionBanner({
 }) {
   return (
     <div
-      className={`relative -mx-4 overflow-hidden sm:mx-0 ${
-        // The hero meets the top of the page, so rounding it there would leave
-        // two corners of bare background under a transparent header.
-        hero ? "sm:rounded-b-2xl" : "sm:rounded-2xl"
-      }`}
+      // Every banner runs the full width of the window rather than sitting in
+      // the menu column: at the desk-width the column is narrow enough that a
+      // boxed photo read as a thumbnail. Full bleed leaves no corners to round.
+      className="relative mx-[calc(50%-50vw)] overflow-hidden"
     >
       <img
         src={src}
         srcSet={srcSet ?? undefined}
-        sizes="(min-width: 1024px) 1024px, 100vw"
+        sizes="100vw"
         alt={alt}
         loading="lazy"
         decoding="async"
@@ -504,20 +503,26 @@ function SectionBanner({
       {/* The gold script can land on open sky or bright sea depending on the
           crop, where the scrim alone is not enough to hold it. */}
       <div
-        className="relative flex min-h-[15rem] flex-col justify-end px-4 pt-24 pb-4 sm:min-h-[19rem] sm:px-6 sm:pt-32"
+        className="relative flex flex-col justify-end pt-24 pb-4 sm:pt-32"
         style={{
           textShadow: "0 2px 12px rgb(1 32 39 / 0.75)",
-          // Give back the height the negative margin took, so the heading still
-          // clears the header and the band keeps its usual proportions.
+          // Now that the band spans the window it has to grow taller with it
+          // too, or a wide screen crops the photo to a letterbox strip.
+          minHeight: "clamp(15rem, 20vw, 24rem)",
+          // Hero: give back the height the negative margin took, so the heading
+          // still clears the header and the band keeps its usual proportions.
           ...(hero
             ? {
-                minHeight: "calc(var(--header-h, 8.5rem) + 15rem)",
+                minHeight:
+                  "calc(var(--header-h, 8.5rem) + clamp(15rem, 20vw, 24rem))",
                 paddingTop: "calc(var(--header-h, 8.5rem) + 6rem)",
               }
             : null),
         }}
       >
-        {children}
+        {/* Full bleed for the photo, but the heading still lines up with the
+            menu column underneath it. */}
+        <div className="mx-auto w-full max-w-5xl px-4">{children}</div>
       </div>
     </div>
   );
