@@ -480,12 +480,19 @@ function SectionBanner({
         className="absolute inset-0 h-full w-full object-cover"
       />
       {/* Opaque at the foot so the photo resolves into the page gradient, and
-          only a light wash up top so the sea stays visible. */}
+          only a light wash through the middle so the sea stays visible.
+
+          Every banner but the hero also closes at the top the same way it does
+          at the foot. The hero's top edge is the top of the page, so it has
+          nothing to meet; the rest cut into the section above them, and a photo
+          that simply started at a ruled line read as a flat pasted-in band next
+          to the hero. Faded at both ends it opens and closes like a view. */}
       <div
         className="absolute inset-0"
         style={{
-          background:
-            "linear-gradient(to top, var(--bg) 6%, rgb(1 65 79 / 0.88) 34%, rgb(1 65 79 / 0.18) 100%)",
+          background: hero
+            ? "linear-gradient(to top, var(--bg) 6%, rgb(1 65 79 / 0.88) 34%, rgb(1 65 79 / 0.18) 100%)"
+            : "linear-gradient(to bottom, var(--bg) 0%, rgb(1 65 79 / 0.7) 18%, rgb(1 65 79 / 0.2) 40%, rgb(1 65 79 / 0.88) 66%, var(--bg) 94%)",
         }}
       />
       {/* Hero only: the header sits directly on the photo with no bar of its
