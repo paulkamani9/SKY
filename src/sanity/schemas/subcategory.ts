@@ -1,5 +1,7 @@
 import { defineField, defineType } from "sanity";
 
+import { TRANSLATION_FIELDSET, translated } from "./translations";
+
 /**
  * A named group of items inside a section — "Premium Gelato" under Gelato &
  * Sorbets, "Iced & Chilled Coffee" under Coffee.
@@ -14,6 +16,7 @@ export const subcategory = defineType({
   name: "subcategory",
   title: "Sub-section",
   type: "document",
+  fieldsets: [TRANSLATION_FIELDSET],
   fields: [
     defineField({
       name: "titleEn",
@@ -27,6 +30,7 @@ export const subcategory = defineType({
       type: "string",
       validation: (r) => r.required(),
     }),
+    ...translated("title", "Title"),
     defineField({
       name: "category",
       title: "Menu section",

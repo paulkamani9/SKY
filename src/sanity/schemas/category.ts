@@ -1,9 +1,12 @@
 import { defineField, defineType } from "sanity";
 
+import { TRANSLATION_FIELDSET, translated } from "./translations";
+
 export const category = defineType({
   name: "category",
   title: "Menu section",
   type: "document",
+  fieldsets: [TRANSLATION_FIELDSET],
   fields: [
     defineField({
       name: "titleEn",
@@ -46,6 +49,26 @@ export const category = defineType({
       rows: 2,
     }),
     defineField({
+      name: "fruitsEn",
+      title: "Fruit list (English)",
+      type: "text",
+      rows: 2,
+      description:
+        'What is on the display table today — fruits separated by commas, e.g. "Papaya, Mango, Red Dragon Fruit". Shown as a row of chips under the items, so a guest building their own bowl or blend can see what there is to choose from. Edit this whenever the season changes; it is the one place the menu names the fruit, so nothing else has to be touched. Leave empty on sections that do not need it.',
+    }),
+    defineField({
+      name: "fruitsFr",
+      title: "Fruit list (French)",
+      type: "text",
+      rows: 2,
+      description:
+        "Leave empty and the English list is shown instead — useful when the season turns and there is no time to translate.",
+    }),
+    ...translated("title", "Title"),
+    ...translated("intro", "Intro line", { type: "text", rows: 2 }),
+    ...translated("footnote", "Footnote", { type: "text", rows: 2 }),
+    ...translated("fruits", "Fruit list", { type: "text", rows: 2 }),
+    defineField({
       name: "banner",
       title: "Section banner",
       type: "image",
@@ -68,6 +91,14 @@ export const category = defineType({
       },
       initialValue: "grid",
       validation: (r) => r.required(),
+    }),
+    defineField({
+      name: "wideTiles",
+      title: "One item per row on a phone",
+      type: "boolean",
+      description:
+        "Photo grid only. For short sections of showpiece items — the fruit bowls — where two columns shrink each photo to a thumbnail. Off gives the usual two-up phone grid.",
+      initialValue: false,
     }),
     defineField({
       name: "order",

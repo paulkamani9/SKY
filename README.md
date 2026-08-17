@@ -6,7 +6,9 @@ straight on the menu. Staff edit items, prices, photos and availability at
 
 - **Framework:** Next.js (App Router) on Vercel
 - **Content:** Sanity (free tier), Studio embedded at `/studio`
-- **Languages:** English / French, toggled in the header and remembered per device
+- **Languages:** English, French, Italian, German and Russian, picked in the
+  header and remembered per device. English and French are the master text; a
+  blank translation falls back to English rather than showing a gap
 - **Layout:** sections choose their own presentation — a photo grid (2 columns on
   a phone, 3 on a tablet, 4 on desktop) for food, or a compact list for long
   drink sections like Coffee and Teas where photos would only slow the page.
@@ -19,6 +21,11 @@ There is no cart or ordering flow: guests read, then order with a member of staf
 The full menu — 11 sections, 85 items, transcribed from the master menu PDF and
 translated into French — lives in
 [`src/lib/menuContent.ts`](src/lib/menuContent.ts).
+
+The wording is the master menu's own, verbatim, with two deliberate departures:
+British spelling throughout (flavours, savoury, chilli, yoghurt), and short
+section names that fit the phone's nav pills — "Coffee" rather than "The Coffee
+Station". Items keep the menu's prices, names and descriptions as printed.
 
 It renders directly until Sanity has its first published section, so the site
 works the moment it is deployed. Run `npm run seed` (step 4) to push it into
@@ -40,6 +47,42 @@ read.
   heading. Items must be ordered so a group's items sit next to each other.
 - **Section intros and footnotes** — "Served daily until 13:00", the milk
   alternatives note under Coffee.
+- **A fruit list under a section** — the fruits on the display table today,
+  drawn as chips under Fruit Bowls and Smoothies so a guest composing their own
+  bowl or blend can see what there is. One comma-separated line per language in
+  the **Fruit list** field; blank on the sections that don't need it. It is
+  deliberately a section field and not part of any item description: the fruit
+  turns with the season, and this is the one box to edit when it does. The
+  English line alone is enough — the other languages fall back to it.
+- **One item per row on a phone** — the **wideTiles** switch on a section, for
+  the two fruit bowls, whose photos are the point and were being shrunk to
+  thumbnails by the standard two-up grid.
+- **Names under the tile** — every photo grid but the first prints the item name
+  under the picture, above the price. Gelato & Sorbets alone keeps its names on
+  the back of the tile: eleven scoops that the pictures carry, where the flip is
+  what tells a guest the menu is worth touching.
+
+### The other three languages
+
+Italian, German and Russian live in
+[`src/lib/menuTranslations.ts`](src/lib/menuTranslations.ts), keyed by document
+id, and are pushed into Sanity with:
+
+```bash
+npm run migrate:languages -- --dry-run
+```
+
+```bash
+npm run migrate:languages
+```
+
+Unlike `npm run seed`, it only writes translation fields — never a price, photo,
+order or availability — so it is safe to re-run against a live dataset. In the
+Studio the three sit in a collapsed **Italiano · Deutsch · Русский** panel on
+each item, section and sub-section, under the English and French fields.
+
+> They are careful translations, not copy written by a native speaker. Worth a
+> read-through by someone who speaks the language before this goes to print.
 
 ## 1. Create the Sanity project
 
@@ -172,8 +215,10 @@ half-photographed section still looks deliberate.
 - If Sanity is unreachable the page falls back to the bundled menu rather than
   showing an error screen.
 - Sections with no items are hidden automatically.
-- French text falls back to English (and vice versa) when a translation is blank,
-  so a half-filled item never renders an empty line.
+- Text falls back to English (then French) when a translation is blank, so a
+  half-filled item never renders an empty line.
+- The fruit bowl photos still show fruit SKY does not stock. Prompts for their
+  replacements are in [`docs/photo-briefs.md`](docs/photo-briefs.md).
 
 ## Adding the real photos
 

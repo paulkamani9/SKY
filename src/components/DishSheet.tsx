@@ -16,9 +16,9 @@ type Props = {
 export function DishSheet({ dish, lang, currency, onClose }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  const name = pick(lang, dish.nameEn, dish.nameFr);
-  const description = pick(lang, dish.descriptionEn, dish.descriptionFr);
-  const group = pick(lang, dish.groupEn, dish.groupFr);
+  const name = pick(lang, dish, "name");
+  const description = pick(lang, dish, "description");
+  const group = pick(lang, dish, "group");
   const price = priceLabel(dish, lang, currency);
   const numeric = isNumericPrice(dish);
   const soldOut = dish.available === false;

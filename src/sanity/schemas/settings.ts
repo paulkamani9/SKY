@@ -1,10 +1,13 @@
 import { defineField, defineType } from "sanity";
 
+import { TRANSLATION_FIELDSET, translated } from "./translations";
+
 export const settings = defineType({
   name: "settings",
   title: "Restaurant settings",
   type: "document",
   // Singleton: only one of these should ever exist.
+  fieldsets: [TRANSLATION_FIELDSET],
   fields: [
     defineField({
       name: "name",
@@ -51,6 +54,8 @@ export const settings = defineType({
       type: "text",
       rows: 2,
     }),
+    ...translated("tagline", "Tagline"),
+    ...translated("notice", "Notice", { type: "text", rows: 2 }),
   ],
   preview: {
     select: { title: "name" },

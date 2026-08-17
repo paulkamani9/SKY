@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
-    "migrate:subcategories": "tsx --env-file=.env.local scripts/subcategories.ts"
+    "migrate:subcategories": "tsx --env-file=.env.local scripts/subcategories.ts",
+    "migrate:languages": "tsx --env-file=.env.local scripts/languages.ts"
   },
   "dependencies": {
     "@sanity/image-url": "^1.2.0",

@@ -4,7 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DishSheet } from "@/components/DishSheet";
 import { Wordmark } from "@/components/Wordmark";
-import { isNumericPrice, pick, priceLabel, t } from "@/lib/i18n";
+import {
+  fruitList,
+  isLang,
+  isNumericPrice,
+  LANG_NAMES,
+  LANGS,
+  pick,
+  priceLabel,
+  t,
+} from "@/lib/i18n";
 import type { Category, Dish, Lang, Settings } from "@/sanity/queries";
 
 const LANG_KEY = "menu-lang";
@@ -34,7 +43,7 @@ function groupDishes(category: Category, lang: Lang, currency: string): Group[] 
   const groups: Group[] = [];
 
   for (const dish of category.dishes) {
-    const title = pick(lang, dish.groupEn, dish.groupFr);
+    const title = pick(lang, dish, "group");
     const key = dish.groupEn || dish.groupFr || "";
     const last = groups[groups.length - 1];
 
@@ -85,11 +94,20 @@ export function MenuView({ categories, settings }: Props) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem(LANG_KEY);
-    if (stored === "en" || stored === "fr") {
+    if (isLang(stored)) {
       setLang(stored);
       return;
     }
-    if (navigator.language?.toLowerCase().startsWith("fr")) setLang("fr");
+
+    // "de-CH", "ru-RU", "it" — the browser's own preference order, first match
+    // wins. English is the default, so it needs no special case.
+    for (const tag of navigator.languages ?? [navigator.language]) {
+      const code = tag?.slice(0, 2).toLowerCase();
+      if (isLang(code)) {
+        setLang(code);
+        return;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -212,7 +230,7 @@ export function MenuView({ categories, settings }: Props) {
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const tagline = pick(lang, settings?.taglineEn, settings?.taglineFr);
+  const tagline = pick(lang, settings, "tagline");
 
   // The opening section's photo runs the full height of the page behind the
   // header. Without a banner there is nothing to show through, so the header
@@ -274,44 +292,7 @@ export function MenuView({ categories, settings }: Props) {
             ) : null}
           </div>
 
-          <div
-            className="flex shrink-0 rounded-full p-0.5 text-[11px] font-semibold"
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--gold-line)",
-            }}
-            role="group"
-            aria-label="Language"
-          >
-            {(["en", "fr"] as const).map((code) => {
-              const isActive = lang === code;
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => changeLang(code)}
-                  aria-pressed={isActive}
-                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 uppercase transition"
-                  style={{
-                    background: isActive
-                      ? "linear-gradient(140deg, var(--blue) 0%, var(--green) 100%)"
-                      : "transparent",
-                    color: isActive ? "var(--ink)" : "var(--muted-dim)",
-                    boxShadow: isActive
-                      ? "inset 0 0 0 1px var(--gold-line)"
-                      : "none",
-                  }}
-                >
-                  <Flag
-                    code={code}
-                    // Inactive flags sit back so the chosen one reads first.
-                    className={isActive ? "opacity-100" : "opacity-60"}
-                  />
-                  {code}
-                </button>
-              );
-            })}
-          </div>
+          <LanguagePicker lang={lang} onChange={changeLang} />
         </div>
 
         {categories.length > 1 ? (
@@ -340,7 +321,7 @@ export function MenuView({ categories, settings }: Props) {
                       color: isActive ? "var(--ink)" : "var(--muted)",
                     }}
                   >
-                    {pick(lang, c.titleEn, c.titleFr)}
+                    {pick(lang, c, "title")}
                   </button>
                 );
               })}
@@ -401,20 +382,158 @@ export function MenuView({ categories, settings }: Props) {
 }
 
 /**
+ * The language switcher.
+ *
+ * Two languages fitted side by side in the header; five do not — and the header
+ * is not free to grow, since the opening banner is positioned against its
+ * measured height. So the bar shows the current language only, and the rest
+ * open in a panel beneath it.
+ */
+function LanguagePicker({
+  lang,
+  onChange,
+}: {
+  lang: Lang;
+  onChange: (next: Lang) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={root} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`${t(lang, "language")}: ${LANG_NAMES[lang]}`}
+        className="flex items-center gap-1.5 rounded-full py-1.5 pr-2 pl-2.5 text-[11px] font-semibold uppercase transition active:scale-95"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--gold-line)",
+          color: "var(--muted)",
+        }}
+      >
+        <Flag code={lang} />
+        {lang}
+        <svg
+          viewBox="0 0 10 6"
+          className="h-[5px] w-[9px] transition-transform duration-200"
+          style={{ transform: open ? "rotate(180deg)" : undefined }}
+          aria-hidden="true"
+        >
+          <path
+            d="M1 1 L5 5 L9 1"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {open ? (
+        <div
+          role="menu"
+          aria-label={t(lang, "language")}
+          className="absolute top-full right-0 z-40 mt-2 w-44 overflow-hidden rounded-xl py-1"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--gold-line)",
+            // The panel opens over the hero photo, where a flat panel with no
+            // shadow read as part of the picture.
+            boxShadow: "0 18px 34px rgb(1 32 39 / 0.55)",
+            // Inherited from the header while it sits over the hero, where it
+            // smeared this text against the panel's own background.
+            textShadow: "none",
+          }}
+        >
+          {LANGS.map((code) => {
+            const isActive = code === lang;
+            return (
+              <button
+                key={code}
+                type="button"
+                role="menuitemradio"
+                aria-checked={isActive}
+                onClick={() => {
+                  onChange(code);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[13px] transition"
+                style={{
+                  background: isActive
+                    ? "linear-gradient(140deg, var(--blue) 0%, var(--green) 100%)"
+                    : "transparent",
+                  color: isActive ? "var(--ink)" : "var(--muted)",
+                  fontWeight: isActive ? 600 : 400,
+                }}
+              >
+                <Flag code={code} className={isActive ? "" : "opacity-70"} />
+                {LANG_NAMES[code]}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
  * Flags for the language toggle, drawn rather than set as emoji: the flag
  * emoji render as bare "GB"/"FR" letters on Windows and on some Androids,
  * which is exactly the audience least likely to forgive it.
  */
-function Flag({ code, className }: { code: "en" | "fr"; className?: string }) {
+function Flag({ code, className }: { code: Lang; className?: string }) {
   const shared = `h-3 w-[18px] shrink-0 rounded-[2px] ${className ?? ""}`;
   const ring = { boxShadow: "0 0 0 1px rgb(1 32 39 / 0.35)" };
 
-  if (code === "fr") {
+  // Three vertical bands: France, Italy.
+  if (code === "fr" || code === "it") {
+    const bands =
+      code === "fr"
+        ? ["#002395", "#ffffff", "#ED2939"]
+        : ["#008C45", "#F4F5F0", "#CD212A"];
     return (
       <svg viewBox="0 0 60 30" className={shared} style={ring} aria-hidden="true">
-        <rect width="20" height="30" fill="#002395" />
-        <rect x="20" width="20" height="30" fill="#ffffff" />
-        <rect x="40" width="20" height="30" fill="#ED2939" />
+        {bands.map((fill, i) => (
+          <rect key={fill} x={i * 20} width="20" height="30" fill={fill} />
+        ))}
+      </svg>
+    );
+  }
+
+  // Three horizontal bands: Germany, Russia.
+  if (code === "de" || code === "ru") {
+    const bands =
+      code === "de"
+        ? ["#000000", "#DD0000", "#FFCE00"]
+        : ["#ffffff", "#0039A6", "#D52B1E"];
+    return (
+      <svg viewBox="0 0 60 30" className={shared} style={ring} aria-hidden="true">
+        {bands.map((fill, i) => (
+          <rect key={fill} y={i * 10} width="60" height="10" fill={fill} />
+        ))}
       </svg>
     );
   }
@@ -558,10 +677,18 @@ function SectionBlock({
     [category, lang, currency],
   );
 
-  const intro = pick(lang, category.introEn, category.introFr);
-  const footnote = pick(lang, category.footnoteEn, category.footnoteFr);
+  const intro = pick(lang, category, "intro");
+  const footnote = pick(lang, category, "footnote");
+  const fruits = fruitList(lang, category);
   const isGrid = category.layout !== "list";
   const bannerUrl = category.bannerUrl;
+
+  // The opening section is the one place a tile stays wordless until it is
+  // turned over: it is eleven scoops of gelato, the pictures carry it, and the
+  // flip is the first thing that tells a guest this menu is worth touching.
+  // Everywhere else the name is printed under the photo, so a guest scanning
+  // for a specific dish does not have to flip nine tiles to find it.
+  const showNames = !isFirst;
 
   const heading = (
     <>
@@ -569,7 +696,7 @@ function SectionBlock({
         className="script-heading text-[30px] leading-tight font-semibold"
         style={{ color: "var(--gold)" }}
       >
-        {pick(lang, category.titleEn, category.titleFr)}
+        {pick(lang, category, "title")}
       </h2>
       <div className="gold-rule mt-2 h-px w-full" />
 
@@ -631,7 +758,13 @@ function SectionBlock({
           ) : null}
 
           {isGrid ? (
-            <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">
+            <ul
+              className={`mt-4 grid gap-x-4 gap-y-7 sm:gap-x-6 ${
+                category.wideTiles
+                  ? "grid-cols-1 gap-y-9 sm:grid-cols-2"
+                  : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+              }`}
+            >
               {group.dishes.map((dish) => (
                 <DishCard
                   key={dish._id}
@@ -639,6 +772,7 @@ function SectionBlock({
                   lang={lang}
                   currency={currency}
                   hidePrice={group.sharedPrice !== null}
+                  showName={showNames}
                 />
               ))}
             </ul>
@@ -659,6 +793,42 @@ function SectionBlock({
           )}
         </div>
       ))}
+
+      {/* What is actually on the display table today. A guest reading "select
+          any 3 to 4 fruits" has no way to choose without it, and it belongs
+          under the section rather than on the back of one tile, where only the
+          guest who thought to flip that tile would ever find it. */}
+      {fruits.length > 0 ? (
+        <div
+          className="mt-7 rounded-2xl px-4 py-4"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--gold-line-soft)",
+          }}
+        >
+          <h3
+            className="text-[11px] font-semibold tracking-[0.18em] uppercase"
+            style={{ color: "var(--sky-1)" }}
+          >
+            {t(lang, "fruits")}
+          </h3>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {fruits.map((fruit) => (
+              <li
+                key={fruit}
+                className="rounded-full px-3 py-1.5 text-[12.5px]"
+                style={{
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--gold-line-soft)",
+                  color: "var(--muted)",
+                }}
+              >
+                {fruit}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {footnote ? (
         <p
@@ -682,22 +852,55 @@ function DishCard({
   lang,
   currency,
   hidePrice,
+  showName,
 }: {
   dish: Dish;
   lang: Lang;
   currency: string;
   hidePrice: boolean;
+  /** Print the name under the photo instead of keeping it on the back face. */
+  showName: boolean;
 }) {
   const [flipped, setFlipped] = useState(false);
   // Measured on the server so the first paint is already the right size — see
   // lib/imageScale for why this is not done in the browser.
   const scale = dish.imageScale ?? 1;
 
-  const name = pick(lang, dish.nameEn, dish.nameFr);
-  const description = pick(lang, dish.descriptionEn, dish.descriptionFr);
+  const name = pick(lang, dish, "name");
+  const description = pick(lang, dish, "description");
   const price = hidePrice ? null : priceLabel(dish, lang, currency);
   const numeric = isNumericPrice(dish);
   const soldOut = dish.available === false;
+
+  // Name above price, both under the picture. Rendered once and used by the
+  // photo tile and the text-only tile alike, so the two stay in step.
+  const caption =
+    showName || price ? (
+      <div className="mt-2.5 flex flex-col gap-1 text-center">
+        {showName ? (
+          <h4
+            className="text-[13px] leading-snug font-medium"
+            style={{
+              color: "var(--ink)",
+              opacity: soldOut ? 0.6 : 1,
+            }}
+          >
+            {name}
+          </h4>
+        ) : null}
+        {price ? (
+          <p
+            className={`text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
+            style={{
+              color: numeric ? "var(--gold-strong)" : "var(--muted)",
+              opacity: soldOut ? 0.6 : 1,
+            }}
+          >
+            {price}
+          </p>
+        ) : null}
+      </div>
+    ) : null;
 
   // Nothing to flip away from, so this one just reads as text. It keeps the
   // square footprint of its neighbours so the grid rows stay level.
@@ -708,12 +911,14 @@ function DishCard({
           className="flex aspect-square w-full flex-col justify-center gap-1.5 px-1 text-center"
           style={{ opacity: soldOut ? 0.55 : 1 }}
         >
-          <h4
-            className="text-[14px] leading-snug font-medium"
-            style={{ color: "var(--gold-strong)" }}
-          >
-            {name}
-          </h4>
+          {showName ? null : (
+            <h4
+              className="text-[14px] leading-snug font-medium"
+              style={{ color: "var(--gold-strong)" }}
+            >
+              {name}
+            </h4>
+          )}
           {description ? (
             <p
               className="line-clamp-6 text-[11.5px] leading-relaxed"
@@ -732,17 +937,7 @@ function DishCard({
           ) : null}
         </div>
 
-        {price ? (
-          <p
-            className={`mt-2.5 text-center text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
-            style={{
-              color: numeric ? "var(--gold-strong)" : "var(--muted)",
-              opacity: soldOut ? 0.6 : 1,
-            }}
-          >
-            {price}
-          </p>
-        ) : null}
+        {caption}
       </li>
     );
   }
@@ -811,12 +1006,17 @@ function DishCard({
               className="absolute inset-0 flex flex-col justify-center gap-1.5 px-1 text-center [backface-visibility:hidden] [transform:rotateY(180deg)]"
               aria-hidden={!flipped}
             >
-              <h4
-                className="text-[14px] leading-snug font-medium"
-                style={{ color: "var(--gold-strong)" }}
-              >
-                {name}
-              </h4>
+              {/* The name is already printed under the tile in every section
+                  but the first, so repeating it here would only crowd out the
+                  description this face exists to show. */}
+              {showName ? null : (
+                <h4
+                  className="text-[14px] leading-snug font-medium"
+                  style={{ color: "var(--gold-strong)" }}
+                >
+                  {name}
+                </h4>
+              )}
               {description ? (
                 <p
                   className="line-clamp-6 text-[11.5px] leading-relaxed"
@@ -829,17 +1029,7 @@ function DishCard({
           </div>
         </div>
 
-        {price ? (
-          <p
-            className={`mt-2.5 text-center text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
-            style={{
-              color: numeric ? "var(--gold-strong)" : "var(--muted)",
-              opacity: soldOut ? 0.6 : 1,
-            }}
-          >
-            {price}
-          </p>
-        ) : null}
+        {caption}
       </button>
     </li>
   );
@@ -860,8 +1050,8 @@ function DishRow({
   hidePrice: boolean;
   onOpen: () => void;
 }) {
-  const name = pick(lang, dish.nameEn, dish.nameFr);
-  const description = pick(lang, dish.descriptionEn, dish.descriptionFr);
+  const name = pick(lang, dish, "name");
+  const description = pick(lang, dish, "description");
   const price = hidePrice ? null : priceLabel(dish, lang, currency);
   const numeric = isNumericPrice(dish);
   const soldOut = dish.available === false;

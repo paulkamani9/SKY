@@ -1,3 +1,9 @@
+import {
+  categoryTranslations,
+  dishTranslations,
+  groupTranslations,
+  settingsTranslations,
+} from "@/lib/menuTranslations";
 import type { Category, Dish, Layout, Settings } from "@/sanity/queries";
 
 /**
@@ -41,25 +47,23 @@ type Seed = {
   cutout?: string;
 };
 
-function item(seed: Seed): Dish {
-  if (seed.cutout) {
-    return {
-      _id: seed.id,
-      nameEn: seed.en,
-      nameFr: seed.fr,
-      descriptionEn: seed.descEn,
-      descriptionFr: seed.descFr,
-      price: seed.price ?? null,
-      priceNoteEn: seed.noteEn,
-      priceNoteFr: seed.noteFr,
-      groupEn: seed.groupEn,
-      groupFr: seed.groupFr,
-      available: true,
-      imageUrl: seed.cutout,
-      imageUrlLarge: seed.cutout,
-    };
-  }
+/**
+ * Italian, German and Russian for this item and for the sub-group it sits in.
+ * They live in menuTranslations.ts, keyed by the same ids used here — see the
+ * note at the top of that file.
+ */
+function translationsFor(seed: Seed) {
+  const group = seed.groupEn ? groupTranslations[seed.groupEn] : undefined;
 
+  return {
+    ...dishTranslations[seed.id],
+    groupIt: group?.titleIt,
+    groupDe: group?.titleDe,
+    groupRu: group?.titleRu,
+  };
+}
+
+function item(seed: Seed): Dish {
   return {
     _id: seed.id,
     nameEn: seed.en,
@@ -71,10 +75,13 @@ function item(seed: Seed): Dish {
     priceNoteFr: seed.noteFr,
     groupEn: seed.groupEn,
     groupFr: seed.groupFr,
+    ...translationsFor(seed),
     available: true,
-    ...(seed.photoId
-      ? photo(seed.photoId)
-      : { imageUrl: null, imageUrlLarge: null }),
+    ...(seed.cutout
+      ? { imageUrl: seed.cutout, imageUrlLarge: seed.cutout }
+      : seed.photoId
+        ? photo(seed.photoId)
+        : { imageUrl: null, imageUrlLarge: null }),
   };
 }
 
@@ -84,7 +91,11 @@ function section(
   c: Omit<Category, "dishes" | "layout"> & { layout: Layout },
   seeds: Seed[],
 ): Category {
-  return { ...c, dishes: seeds.map(item) };
+  return {
+    ...c,
+    ...categoryTranslations[c._id],
+    dishes: seeds.map(item),
+  };
 }
 
 export const menuSettings: Settings = {
@@ -94,9 +105,10 @@ export const menuSettings: Settings = {
   currency: "Rs",
   logoUrl: null,
   noticeEn:
-    "A curated collection of artisanal gelato, cold-pressed tropical fruits and premium specialty coffee, crafted to be enjoyed by the ocean.",
+    "A curated collection of artisanal gelato, cold-pressed tropical fruits, and premium specialty coffee, crafted to be enjoyed by the ocean.",
   noticeFr:
     "Une collection choisie de glaces artisanales, de fruits tropicaux pressés à froid et de cafés de spécialité, à savourer face à l'océan.",
+  ...settingsTranslations,
 };
 
 export const menuCategories: Category[] = [
@@ -106,13 +118,13 @@ export const menuCategories: Category[] = [
       titleEn: "Gelato & Sorbets",
       titleFr: "Glaces & Sorbets",
       introEn:
-        "Crafted daily. Pure, vibrant flavours perfect for the beachfront. Single scoop Rs 125.",
+        "Crafted daily. Pure, vibrant flavours perfect for the beachfront. Single scoop selection Rs 125.",
       introFr:
-        "Préparées chaque jour. Des saveurs pures et éclatantes, parfaites en bord de mer. Boule simple Rs 125.",
+        "Préparées chaque jour. Des saveurs pures et éclatantes, parfaites en bord de mer. Sélection à la boule Rs 125.",
       footnoteEn:
-        "Please ask our team about today's seasonal guest flavours.",
+        "Please enquire with our team for today's seasonal guest flavours.",
       footnoteFr:
-        "Demandez à notre équipe les parfums invités du jour.",
+        "Renseignez-vous auprès de notre équipe sur les parfums invités de saison du jour.",
       layout: "grid",
     },
     [
@@ -120,7 +132,7 @@ export const menuCategories: Category[] = [
         id: "gel-mango",
         en: "Mango",
         fr: "Mangue",
-        descEn: "Smooth, velvety and naturally sweet.",
+        descEn: "Smooth, velvety, and naturally sweet.",
         descFr: "Onctueux, velouté et naturellement sucré.",
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
@@ -131,7 +143,7 @@ export const menuCategories: Category[] = [
         id: "gel-passion",
         en: "Passion Fruit",
         fr: "Fruit de la Passion",
-        descEn: "Sharp, vibrant and intensely aromatic.",
+        descEn: "Sharp, vibrant, and intensely aromatic.",
         descFr: "Vif, éclatant et intensément aromatique.",
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
@@ -142,7 +154,7 @@ export const menuCategories: Category[] = [
         id: "gel-pineapple",
         en: "Pineapple",
         fr: "Ananas",
-        descEn: "Crisp, refreshing and packed with island sunshine.",
+        descEn: "Crisp, refreshing, and packed with island sunshine.",
         descFr: "Croquant, rafraîchissant et gorgé de soleil des îles.",
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
@@ -153,7 +165,7 @@ export const menuCategories: Category[] = [
         id: "gel-coco",
         en: "Coco",
         fr: "Coco",
-        descEn: "Rich, smooth and beautifully tropical.",
+        descEn: "Rich, smooth, and beautifully tropical.",
         descFr: "Riche, onctueux et merveilleusement tropical.",
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
@@ -175,7 +187,7 @@ export const menuCategories: Category[] = [
         id: "gel-guava",
         en: "Guava",
         fr: "Goyave",
-        descEn: "Fragrant, exotic and deeply refreshing.",
+        descEn: "Fragrant, exotic, and deeply refreshing.",
         descFr: "Parfumée, exotique et profondément rafraîchissante.",
         price: 125,
         groupEn: "Tropical Sorbets (Dairy-Free)",
@@ -186,7 +198,7 @@ export const menuCategories: Category[] = [
         id: "gel-vanilla",
         en: "Classic Vanilla",
         fr: "Vanille Classique",
-        descEn: "Rich, creamy and elegantly smooth.",
+        descEn: "Rich, creamy, and elegantly smooth.",
         descFr: "Riche, crémeuse et d'une élégante onctuosité.",
         price: 125,
         groupEn: "Premium Gelato",
@@ -197,7 +209,7 @@ export const menuCategories: Category[] = [
         id: "gel-chocolate",
         en: "Deep Chocolate",
         fr: "Chocolat Intense",
-        descEn: "Indulgent, velvety and intensely decadent.",
+        descEn: "Indulgent, velvety, and intensely decadent.",
         descFr: "Gourmand, velouté et intensément décadent.",
         price: 125,
         groupEn: "Premium Gelato",
@@ -255,6 +267,12 @@ export const menuCategories: Category[] = [
         "An elegant, interactive experience tailored completely to your taste.",
       introFr:
         "Une expérience élégante et interactive, entièrement adaptée à vos envies.",
+      // What is actually on the display table. Two items, two photos worth
+      // looking at — one per row on a phone rather than a pair of thumbnails.
+      fruitsEn: "Papaya, Mango, Shredded Coconut, Red Dragon Fruit, Bergamot",
+      fruitsFr:
+        "Papaye, Mangue, Coco râpée, Fruit du dragon rouge, Bergamote",
+      wideTiles: true,
       layout: "grid",
     },
     [
@@ -263,9 +281,9 @@ export const menuCategories: Category[] = [
         en: "Build Your Own Tropical Bowl",
         fr: "Composez Votre Bol Tropical",
         descEn:
-          "The ultimate island ritual. Visit our fresh display table to hand-select your favourite seasonal fruits from the daily harvest. Our team cuts and arranges your selection into a vibrant masterpiece.",
+          "Indulge in the ultimate island ritual. We invite you to visit our fresh display table to hand-select your favourite seasonal fruits from our daily harvest. Our team will freshly cut and elegantly arrange your selection, presenting a vibrant, tasty masterpiece.",
         descFr:
-          "Le rituel insulaire par excellence. Rendez-vous à notre table de présentation pour choisir vous-même vos fruits de saison préférés parmi la récolte du jour. Notre équipe les découpe et les dresse en un chef-d'œuvre éclatant.",
+          "Laissez-vous tenter par le rituel insulaire par excellence. Nous vous invitons à notre table de présentation pour choisir vous-même vos fruits de saison préférés parmi la récolte du jour. Notre équipe les découpe à l'instant et les dresse avec élégance en un chef-d'œuvre éclatant et savoureux.",
         noteEn: "Based on selection",
         noteFr: "Selon votre sélection",
         photoId: "1583258292688-d0213dc5a3a8",
@@ -275,9 +293,9 @@ export const menuCategories: Category[] = [
         en: "The SKY Superfood Bowl",
         fr: "Le Bol Superfood SKY",
         descEn:
-          "Elevate your hand-selected fruit harvest. Choose your fruits from the display table and our team layers them with creamy Greek or fruity yoghurt, honey-baked granola, a premium sprinkle of chia and flax, roasted shaved coconut and a drizzle of pure local honey.",
+          "Elevate your hand-selected fruit harvest. Choose your fruits from the display table, and our team will layer them with your choice of creamy Greek yoghurt or vibrant fruity yoghurt, honey-baked granola, a premium sprinkle of superfood seeds (chia and flax), crisp roasted shaved coconut, and a delicate drizzle of pure local honey.",
         descFr:
-          "Sublimez votre récolte de fruits. Choisissez vos fruits à la table de présentation : notre équipe les superpose de yaourt grec onctueux ou de yaourt fruité, de granola au miel, de graines de chia et de lin, de copeaux de coco torréfiés et d'un filet de miel local pur.",
+          "Sublimez votre récolte de fruits choisie à la main. Choisissez vos fruits à la table de présentation : notre équipe les superpose, à votre choix, de yaourt grec onctueux ou de yaourt fruité éclatant, de granola au miel, d'une pincée premium de graines superfood (chia et lin), de copeaux de coco torréfiés croquants et d'un délicat filet de miel local pur.",
         noteEn: "Selection + premium toppings",
         noteFr: "Sélection + garnitures premium",
         photoId: "1517673400267-0251440c45dc",
@@ -291,9 +309,12 @@ export const menuCategories: Category[] = [
       titleEn: "Smoothies",
       titleFr: "Smoothies",
       introEn:
-        "Blended fresh to order. Thick, frosty and pure fruit indulgence.",
+        "Blended fresh to order. Thick, frosty, and pure fruit indulgence.",
       introFr:
         "Mixés à la commande. Épais, glacés, purement fruités.",
+      fruitsEn: "Papaya, Mango, Shredded Coconut, Red Dragon Fruit, Bergamot",
+      fruitsFr:
+        "Papaye, Mangue, Coco râpée, Fruit du dragon rouge, Bergamote",
       layout: "grid",
     },
     [
@@ -302,9 +323,9 @@ export const menuCategories: Category[] = [
         en: "Build Your Own Signature Blend",
         fr: "Composez Votre Mélange Signature",
         descEn:
-          "Craft your perfect beachside creation. Select any 3 to 4 premium fruits from our daily island harvest.",
+          "Craft your perfect beachside creation. Select any 3 to 4 premium fruits from our daily island harvest below to design a custom, hand-crafted masterwork.",
         descFr:
-          "Créez votre boisson idéale en bord de mer. Choisissez 3 à 4 fruits premium parmi notre récolte du jour.",
+          "Créez votre boisson idéale en bord de mer. Choisissez 3 à 4 fruits premium parmi notre récolte du jour, ci-dessous, pour composer une création sur mesure, préparée à la main.",
         price: 300,
         photoId: "1622597467836-f3285f2131b8",
       },
@@ -313,9 +334,9 @@ export const menuCategories: Category[] = [
         en: "The Flic-en-Flac Crush",
         fr: "Le Flic-en-Flac Crush",
         descEn:
-          "Our house recommendation: a vibrant, exotic blend of sweet mango, crisp pineapple, sharp passion fruit and stunning dragon fruit.",
+          "Our house-recommended combination: a vibrant, exotic blend of sweet mango, crisp pineapple, sharp passion fruit, and stunning dragon fruit.",
         descFr:
-          "Notre recommandation maison : un mélange exotique et éclatant de mangue sucrée, d'ananas croquant, de fruit de la passion vif et de superbe fruit du dragon.",
+          "La combinaison recommandée par la maison : un mélange exotique et éclatant de mangue sucrée, d'ananas croquant, de fruit de la passion vif et de superbe fruit du dragon.",
         price: 300,
         photoId: "1502741224143-90386d7f8c82",
       },
@@ -324,7 +345,7 @@ export const menuCategories: Category[] = [
         en: "Golden Hour",
         fr: "Golden Hour",
         descEn:
-          "An electric, beautifully vibrant smoothie crafted from sweet pineapple, bright orange and exotic dragon fruit.",
+          "An electric, beautifully vibrant smoothie crafted from sweet pineapple, bright orange, and exotic dragon fruit.",
         descFr:
           "Un smoothie électrique et magnifiquement éclatant, à base d'ananas sucré, d'orange lumineuse et de fruit du dragon exotique.",
         price: 300,
@@ -334,10 +355,13 @@ export const menuCategories: Category[] = [
         id: "smo-single",
         en: "Single-Fruit Smoothies",
         fr: "Smoothies Mono-Fruit",
+        // The fruit list moved out of here and onto the section, where it is
+        // read once for the whole menu instead of hiding on the back of one
+        // tile — and where it stays true as the display table changes.
         descEn:
-          "Thick, simple and refreshing. Choose any single fruit from our raw island selection: mango, passion fruit, dragon fruit, pineapple, coconut, letchi, guava, avocado, watermelon, papaya, banana, melon, starfruit, grapefruit, orange or lemon.",
+          "Thick, simple, and refreshing. Choose any single fruit from our raw island selection.",
         descFr:
-          "Épais, simple et rafraîchissant. Choisissez un fruit parmi notre sélection : mangue, fruit de la passion, fruit du dragon, ananas, coco, letchi, goyave, avocat, pastèque, papaye, banane, melon, carambole, pamplemousse, orange ou citron.",
+          "Épais, simple et rafraîchissant. Choisissez un seul fruit parmi notre sélection de fruits de l'île.",
         price: 250,
         photoId: "1553530666-ba11a7da3888",
       },
@@ -350,9 +374,9 @@ export const menuCategories: Category[] = [
       titleEn: "Juices & Shots",
       titleFr: "Jus & Shots",
       introEn:
-        "100% pure fruit, extracted fresh to order. Light, crisp and deeply hydrating.",
+        "100% pure fruit liquid, extracted fresh to order. Light, crisp, and deeply hydrating.",
       introFr:
-        "100% pur fruit, extrait à la commande. Léger, vif et profondément hydratant.",
+        "100% pur jus de fruit, extrait à la commande. Léger, vif et profondément hydratant.",
       layout: "grid",
     },
     [
@@ -374,7 +398,7 @@ export const menuCategories: Category[] = [
         en: "Coral Reef",
         fr: "Coral Reef",
         descEn:
-          "A visually stunning, thirst-quenching press of hydrating watermelon, tart passion fruit and fresh garden mint.",
+          "A visually stunning, thirst-quenching press of hydrating watermelon, tart passion fruit, and fresh garden mint.",
         descFr:
           "Un pressé spectaculaire et désaltérant de pastèque hydratante, de fruit de la passion acidulé et de menthe fraîche du jardin.",
         price: 250,
@@ -387,7 +411,7 @@ export const menuCategories: Category[] = [
         en: "Pure Passion Citrus",
         fr: "Pure Passion Citrus",
         descEn:
-          "An intensely aromatic, bold press of passion fruit, orange and grapefruit for a sophisticated, zesty finish.",
+          "An intensely aromatic, bold press of passion fruit, orange, and grapefruit for a sophisticated, zesty finish.",
         descFr:
           "Un pressé intensément aromatique de fruit de la passion, d'orange et de pamplemousse, pour une finale zestée et raffinée.",
         price: 250,
@@ -412,7 +436,7 @@ export const menuCategories: Category[] = [
         en: "The Golden Glow",
         fr: "The Golden Glow",
         descEn:
-          "A vibrant, immune-boosting press of fresh turmeric, orange, carrot and a crack of black pepper for maximum absorption.",
+          "A vibrant, immune-boosting press of fresh turmeric, orange, carrot, and a crack of black pepper for maximum absorption.",
         descFr:
           "Un pressé éclatant de curcuma frais, d'orange et de carotte, relevé d'un tour de poivre noir pour une absorption optimale.",
         price: 150,
@@ -437,9 +461,9 @@ export const menuCategories: Category[] = [
         en: "The Passion-Mint Black Brew",
         fr: "Thé Noir Passion-Menthe",
         descEn:
-          "A bold, structured premium black tea shaken ice-cold with sharp passion fruit and fragrant snapped garden mint.",
+          "A bold, structured premium black tea shaken ice-cold with sharp passion fruit and intensely fragrant snapped garden mint.",
         descFr:
-          "Un thé noir premium, franc et structuré, secoué glacé avec du fruit de la passion vif et de la menthe fraîche du jardin.",
+          "Un thé noir premium, franc et structuré, shaké glacé avec un fruit de la passion vif et de la menthe du jardin fraîchement cassée, intensément parfumée.",
         price: 240,
         groupEn: "Iced & Shaken Infusions",
         groupFr: "Infusions Glacées & Secouées",
@@ -449,9 +473,9 @@ export const menuCategories: Category[] = [
         en: "Island Peach & Earl Grey",
         fr: "Earl Grey & Pêche des Îles",
         descEn:
-          "A sophisticated black tea base infused with the elegant citrus of bergamot and the soft sweetness of fresh peach.",
+          "A sophisticated black tea base infused with the elegant citrus of bergamot and the soft, juicy sweetness of fresh peach.",
         descFr:
-          "Une base de thé noir raffinée, infusée d'agrumes élégants de bergamote et de la douceur d'une pêche fraîche.",
+          "Une base de thé noir raffinée, infusée de l'agrume élégant de la bergamote et de la douceur tendre et juteuse de la pêche fraîche.",
         price: 240,
         groupEn: "Iced & Shaken Infusions",
         groupFr: "Infusions Glacées & Secouées",
@@ -461,7 +485,7 @@ export const menuCategories: Category[] = [
         en: "Classic Citron Black Tea",
         fr: "Thé Noir Citron Classique",
         descEn:
-          "A timeless, clean and refreshing black tea cold-brewed and finished with generous slices of fresh local lemon.",
+          "A timeless, clean, and refreshing black tea cold-brewed and finished with generous slices of fresh local lemon.",
         descFr:
           "Un thé noir intemporel, net et rafraîchissant, infusé à froid et garni de généreuses tranches de citron local.",
         price: 220,
@@ -473,9 +497,9 @@ export const menuCategories: Category[] = [
         en: "Fruits Rouges Glacé",
         fr: "Fruits Rouges Glacé",
         descEn:
-          "A vibrant, antioxidant-rich ruby infusion of wild red berries and hibiscus, naturally tart and thirst-quenching.",
+          "A vibrant, antioxidant-rich ruby infusion of wild red berries and hibiscus, naturally tart and perfectly thirst-quenching.",
         descFr:
-          "Une infusion rubis éclatante et riche en antioxydants, aux baies rouges sauvages et à l'hibiscus, naturellement acidulée et désaltérante.",
+          "Une infusion rubis éclatante et riche en antioxydants, aux baies rouges sauvages et à l'hibiscus, naturellement acidulée et parfaitement désaltérante.",
         price: 240,
         groupEn: "Iced & Shaken Infusions",
         groupFr: "Infusions Glacées & Secouées",
@@ -485,9 +509,9 @@ export const menuCategories: Category[] = [
         en: "Zesty Ginger Green Tea",
         fr: "Thé Vert Gingembre Zesté",
         descEn:
-          "Chilled premium green tea paired with a sharp kick of cold-pressed ginger and a touch of raw honey.",
+          "Chilled premium green tea paired with a sharp, refreshing kick of cold-pressed ginger and a touch of raw honey.",
         descFr:
-          "Thé vert premium glacé, relevé d'un trait vif de gingembre pressé à froid et d'une touche de miel brut.",
+          "Thé vert premium glacé, associé à une pointe vive et rafraîchissante de gingembre pressé à froid et à une touche de miel brut.",
         price: 240,
         groupEn: "Iced & Shaken Infusions",
         groupFr: "Infusions Glacées & Secouées",
@@ -497,9 +521,9 @@ export const menuCategories: Category[] = [
         en: "Pineapple & Citronella Cooler",
         fr: "Cooler Ananas & Citronnelle",
         descEn:
-          "A beautiful tropical twist. Crisp local lemongrass infusion layered with a splash of fresh pineapple juice.",
+          "A beautiful tropical twist. Crisp local lemongrass (citronella) infusion layered with a splash of fresh pineapple juice.",
         descFr:
-          "Une belle touche tropicale. Infusion de citronnelle locale relevée d'un trait de jus d'ananas frais.",
+          "Une belle touche tropicale. Infusion de citronnelle locale bien fraîche, relevée d'un trait de jus d'ananas frais.",
         price: 240,
         groupEn: "Iced & Shaken Infusions",
         groupFr: "Infusions Glacées & Secouées",
@@ -604,9 +628,9 @@ export const menuCategories: Category[] = [
         en: "The SKY Sunrise Platter",
         fr: "L'Assiette Sunrise SKY",
         descEn:
-          "The ultimate hearty beachfront breakfast. Three eggs cooked to your liking, thick-cut artisanal sourdough toast, premium crispy bacon and grilled sausages. Served with baked beans and your choice of a cold-pressed juice or a hot coffee.",
+          "The ultimate hearty beachfront breakfast. Three eggs cooked to your liking, thick-cut artisanal sourdough toast, premium crispy bacon, and savoury grilled sausages. Served with a side of rich baked beans and your choice of a fresh cold-pressed juice or a hot coffee.",
         descFr:
-          "Le petit-déjeuner copieux par excellence en bord de mer. Trois œufs à votre convenance, pain au levain artisanal grillé, bacon croustillant premium et saucisses grillées. Servi avec des haricots à la tomate et, au choix, un jus pressé à froid ou un café chaud.",
+          "La formule la plus copieuse en bord de mer. Trois œufs cuits selon votre goût, pain au levain artisanal tranché épais et grillé, bacon croustillant premium et saucisses grillées savoureuses. Servi avec une portion de haricots à la sauce tomate et, à votre choix, un jus frais pressé à froid ou un café chaud.",
         price: 500,
         photoId: "1533089860892-a7c6f0a88666",
       },
@@ -615,9 +639,9 @@ export const menuCategories: Category[] = [
         en: "Le Petit Déjeuner Français",
         fr: "Le Petit Déjeuner Français",
         descEn:
-          "A timeless Parisian morning by the sea. Your choice of a warm butter croissant or a pain au chocolat, served with freshly baked crusty bread, premium butter, gourmet fruit jam and a selection of fine cheeses. Accompanied by a hot coffee of your choice.",
+          "A timeless Parisian morning by the sea. Your choice of a warm, flaky artisanal butter croissant or a rich pain au chocolat, served alongside freshly baked crusty bread, premium butter, gourmet fruit jam, and a selection of fine cheeses. Accompanied by a hot, fresh coffee of your choice.",
         descFr:
-          "Un matin parisien intemporel face à la mer. Au choix, un croissant au beurre tiède ou un pain au chocolat, servi avec du pain croustillant frais, du beurre premium, de la confiture de fruits et une sélection de fromages fins. Accompagné d'un café chaud de votre choix.",
+          "Un matin parisien intemporel face à la mer. À votre choix, un croissant au beurre artisanal chaud et feuilleté ou un pain au chocolat gourmand, servi avec du pain croustillant fraîchement cuit, du beurre premium, une confiture de fruits gourmet et une sélection de fromages fins. Accompagné d'un café chaud fraîchement préparé, à votre choix.",
         price: 350,
         photoId: "1555507036-ab1f4038808a",
       },
@@ -626,9 +650,9 @@ export const menuCategories: Category[] = [
         en: "The SKY Avocado Toast",
         fr: "L'Avocado Toast SKY",
         descEn:
-          "Thick-cut toasted sourdough topped with crushed fresh avocado, a squeeze of lime, chilli flakes and a sprinkle of chia seeds.",
+          "Thick-cut toasted sourdough topped with smoothly crushed fresh avocado, a squeeze of lime, chilli flakes, and a delicate sprinkle of chia seeds.",
         descFr:
-          "Pain au levain grillé en tranche épaisse, avocat frais écrasé, trait de citron vert, flocons de piment et graines de chia.",
+          "Pain au levain tranché épais et grillé, garni d'avocat frais finement écrasé, d'un trait de citron vert, de flocons de piment et d'une délicate pincée de graines de chia.",
         price: 275,
         photoId: "1588137378633-dea1336ce1e2",
       },
@@ -637,9 +661,9 @@ export const menuCategories: Category[] = [
         en: "The Caprese Croissant Melt",
         fr: "Croissant Caprese Gratiné",
         descEn:
-          "A flaky, warm toasted croissant filled with melted mozzarella, thick slices of fresh local tomatoes and a house-made basil pesto drizzle.",
+          "A flaky, warm toasted croissant filled with creamy melted mozzarella, thick slices of fresh local tomatoes, and a vibrant house-made basil pesto drizzle.",
         descFr:
-          "Un croissant feuilleté tiède garni de mozzarella fondue, de tranches épaisses de tomates locales et d'un filet de pesto de basilic maison.",
+          "Croissant chaud et feuilleté garni de mozzarella fondante et crémeuse, de tranches épaisses de tomates locales fraîches et d'un filet de pesto au basilic maison bien parfumé.",
         price: 250,
       },
       {
@@ -647,9 +671,9 @@ export const menuCategories: Category[] = [
         en: "Gourmet Smoked Salmon Croissant",
         fr: "Croissant Gourmet au Saumon Fumé",
         descEn:
-          "A flaky, buttery artisanal pastry layered with premium cold-smoked salmon, cream cheese, fresh dill and crisp local capers.",
+          "A flaky, buttery artisanal pastry layered with premium cold-smoked salmon, rich cream cheese, fresh dill, and crisp local capers.",
         descFr:
-          "Une viennoiserie artisanale feuilletée garnie de saumon fumé à froid premium, de fromage frais, d'aneth et de câpres locales.",
+          "Une viennoiserie artisanale feuilletée au beurre, garnie de saumon fumé à froid premium, de fromage frais onctueux, d'aneth frais et de câpres locales croquantes.",
         price: 380,
       },
       {
@@ -657,9 +681,9 @@ export const menuCategories: Category[] = [
         en: "Vanilla Bean & Chia Overnight Oats",
         fr: "Overnight Oats Vanille & Chia",
         descEn:
-          "Rolled oats infused with vanilla bean and oat milk, layered with chia seeds and topped fresh at the counter with sliced bananas, raw local honey and toasted almonds.",
+          "Rolled oats infused with vanilla bean and oat milk, layered with a heavy sprinkle of chia seeds, and topped fresh at the counter with sliced bananas, raw local honey, and toasted almonds.",
         descFr:
-          "Flocons d'avoine infusés à la gousse de vanille et au lait d'avoine, superposés de graines de chia et garnis au comptoir de bananes en tranches, de miel local brut et d'amandes torréfiées.",
+          "Flocons d'avoine infusés à la gousse de vanille et au lait d'avoine, superposés d'une généreuse pincée de graines de chia, puis garnis à la minute au comptoir de tranches de banane, de miel local brut et d'amandes torréfiées.",
         price: 220,
       },
     ],
@@ -671,13 +695,13 @@ export const menuCategories: Category[] = [
       titleEn: "Coffee",
       titleFr: "Cafés",
       introEn:
-        "Premium specialty beans, extracted with precision and served to perfection.",
+        "Crafted with premium specialty beans, extracted with precision, and served to perfection.",
       introFr:
-        "Grains de spécialité premium, extraits avec précision et servis à la perfection.",
+        "Préparés avec des grains de spécialité premium, extraits avec précision et servis à la perfection.",
       footnoteEn:
-        "Milk alternatives available — soy, almond or oat — for an additional Rs 50.",
+        "Milk alternatives available: soy, almond or oat milk for an additional Rs 50.",
       footnoteFr:
-        "Alternatives végétales disponibles — soja, amande ou avoine — supplément Rs 50.",
+        "Alternatives au lait disponibles : soja, amande ou avoine, pour un supplément de Rs 50.",
       layout: "list",
     },
     [
@@ -685,7 +709,7 @@ export const menuCategories: Category[] = [
         id: "cof-espresso",
         en: "Espresso",
         fr: "Espresso",
-        descEn: "Rich, intense shot with dense golden crema.",
+        descEn: "Rich intense shot with dense golden crema.",
         descFr: "Extraction riche et intense, crema dorée et dense.",
         price: 125,
         groupEn: "Classic Hot Drinks",
@@ -725,7 +749,7 @@ export const menuCategories: Category[] = [
         id: "cof-cappuccino",
         en: "Cappuccino",
         fr: "Cappuccino",
-        descEn: "Traditional perfect balance of foam, milk and espresso.",
+        descEn: "Traditional perfect balance of foam, milk, and espresso.",
         descFr: "L'équilibre traditionnel parfait entre mousse, lait et espresso.",
         price: 150,
         groupEn: "Classic Hot Drinks",
@@ -755,7 +779,7 @@ export const menuCategories: Category[] = [
         id: "cof-mocha",
         en: "Café Mocha",
         fr: "Café Mocha",
-        descEn: "Indulgent blend of espresso, rich chocolate and milk.",
+        descEn: "Indulgent blend of espresso, rich chocolate, and milk.",
         descFr: "Mélange gourmand d'espresso, de chocolat riche et de lait.",
         price: 175,
         groupEn: "Classic Hot Drinks",
@@ -775,7 +799,7 @@ export const menuCategories: Category[] = [
         id: "cof-chai",
         en: "SKY Spiced Chai Latte",
         fr: "Chai Latte Épicé SKY",
-        descEn: "Aromatic blend of tea, Mauritian spices and raw honey.",
+        descEn: "Aromatic blend of tea, Mauritian spices, and raw honey.",
         descFr: "Mélange aromatique de thé, d'épices mauriciennes et de miel brut.",
         price: 150,
         groupEn: "Classic Hot Drinks",
@@ -805,7 +829,7 @@ export const menuCategories: Category[] = [
         id: "cof-iced-caramel",
         en: "Iced Caramel Latte",
         fr: "Latte Caramel Glacé",
-        descEn: "Our smooth latte layered with sweet, rich caramel sauce.",
+        descEn: "Our smooth latte layered with sweet rich caramel sauce.",
         descFr: "Notre latte onctueux nappé d'une sauce caramel riche et sucrée.",
         price: 175,
         groupEn: "Iced & Chilled Coffee",
@@ -830,9 +854,9 @@ export const menuCategories: Category[] = [
       titleEn: "Milkshakes & Pastries",
       titleFr: "Milkshakes & Pâtisseries",
       introEn:
-        "Thick, indulgent shakes crafted with our artisanal gelato, blended smooth and served ice-cold.",
+        "Thick, indulgent shakes crafted with our premium artisanal gelato, blended smooth and served ice-cold.",
       introFr:
-        "Des milkshakes épais et gourmands, préparés avec nos glaces artisanales, mixés onctueux et servis glacés.",
+        "Des milkshakes épais et gourmands, préparés avec notre gelato artisanal premium, mixés onctueux et servis glacés.",
       layout: "grid",
     },
     [
@@ -841,9 +865,9 @@ export const menuCategories: Category[] = [
         en: "The Mango Sovereign",
         fr: "The Mango Sovereign",
         descEn:
-          "Our crowning signature shake. Vibrant, sweet fresh mangoes blended with a rich artisanal vanilla gelato base.",
+          "Our crowning signature shake. Vibrant, sweet fresh mangoes blended perfectly with a rich artisanal vanilla gelato base.",
         descFr:
-          "Notre milkshake signature. Mangues fraîches sucrées et éclatantes, mixées sur une base de glace vanille artisanale.",
+          "Notre milkshake signature par excellence. Des mangues fraîches, sucrées et éclatantes, parfaitement mixées avec une riche base de gelato artisanal à la vanille.",
         price: 250,
         groupEn: "Milkshakes",
         groupFr: "Milkshakes",
@@ -854,9 +878,9 @@ export const menuCategories: Category[] = [
         en: "Matcha Frappé",
         fr: "Frappé Matcha",
         descEn:
-          "A luxurious, icy blend of premium ceremonial matcha whipped smooth with our vanilla gelato base.",
+          "A luxurious, icy blend of premium ceremonial matcha green tea whipped smooth with our vanilla gelato base for a vibrant, modern twist.",
         descFr:
-          "Un mélange glacé et luxueux de matcha de cérémonie premium, fouetté avec notre base de glace vanille.",
+          "Un mélange luxueux et glacé de thé vert matcha de cérémonie premium, fouetté onctueux avec notre base de gelato à la vanille, pour une touche éclatante et moderne.",
         price: 260,
         groupEn: "Milkshakes",
         groupFr: "Milkshakes",
@@ -867,9 +891,9 @@ export const menuCategories: Category[] = [
         en: "Oreo Cookies Crunch",
         fr: "Oreo Cookies Crunch",
         descEn:
-          "Premium cookies & cream gelato blended smooth and packed with crushed, crunchy Oreo biscuits.",
+          "Premium cookies & cream gelato blended smooth and packed with crushed, crunchy Oreo cocoa biscuits.",
         descFr:
-          "Glace cookies & cream premium mixée onctueuse et généreusement parsemée de biscuits Oreo concassés.",
+          "Gelato premium cookies & cream mixé onctueux et généreusement garni de biscuits Oreo au cacao concassés et croquants.",
         price: 240,
         groupEn: "Milkshakes",
         groupFr: "Milkshakes",
@@ -892,9 +916,9 @@ export const menuCategories: Category[] = [
         en: "Deep Chocolate Velvet",
         fr: "Deep Chocolate Velvet",
         descEn:
-          "An intense, decadent chocolate shake crafted with rich chocolate gelato and finished with a chocolate drizzle.",
+          "An intense, decadent chocolate shake crafted with rich chocolate gelato and finished with a smooth chocolate drizzle.",
         descFr:
-          "Un milkshake au chocolat intense et décadent, préparé avec une glace chocolat riche et nappé d'un filet de chocolat.",
+          "Un milkshake au chocolat intense et gourmand, préparé avec un riche gelato au chocolat et terminé par un filet de chocolat onctueux.",
         price: 230,
         groupEn: "Milkshakes",
         groupFr: "Milkshakes",
@@ -942,9 +966,9 @@ export const menuCategories: Category[] = [
         en: "Daily Baked Pastries & Croissants",
         fr: "Viennoiseries & Croissants du Jour",
         descEn:
-          "Baked fresh every single morning. Please visit our display next to the counter to see today's selection of artisanal pastries, flaky croissants and sweet treats.",
+          "Baked fresh every single morning. Please visit our visual display next to the primary counter to view today's fresh selection of artisanal pastries, flaky croissants, and sweet treats.",
         descFr:
-          "Cuits chaque matin. Rendez-vous à notre vitrine près du comptoir pour découvrir la sélection du jour : pâtisseries artisanales, croissants feuilletés et douceurs.",
+          "Cuites fraîches chaque matin. Rendez-vous devant notre présentoir, à côté du comptoir principal, pour découvrir la sélection du jour : pâtisseries artisanales, croissants feuilletés et douceurs.",
         noteEn: "As priced",
         noteFr: "Prix affichés",
         groupEn: "From the Pastry Showcase",
@@ -971,9 +995,9 @@ export const menuCategories: Category[] = [
         en: "Crispy Golden Prawns",
         fr: "Crevettes Dorées Croustillantes",
         descEn:
-          "A generous serving of plump, juicy prawns in a remarkably crunchy golden batter. Served with a sweet chilli and tropical pineapple dipping sauce.",
+          "A generous serving of plump, juicy prawns coated in a remarkably crunchy, golden batter. Served with a custom sweet chilli and tropical pineapple dipping sauce.",
         descFr:
-          "Une portion généreuse de crevettes charnues et juteuses, dans une panure dorée remarquablement croustillante. Servies avec une sauce sweet chilli et ananas.",
+          "Une portion généreuse de crevettes charnues et juteuses, enrobées d'une pâte à frire dorée et remarquablement croustillante. Servies avec une sauce maison au sweet chilli et à l'ananas tropical.",
         price: 390,
         photoId: "1559737558-2f5a35f4523b",
       },
@@ -982,9 +1006,9 @@ export const menuCategories: Category[] = [
         en: "Crispy Calamari Rings",
         fr: "Anneaux de Calamars Croustillants",
         descEn:
-          "A premium portion of tender calamari tossed in a light, seasoned crust and fried until perfectly golden. Served with ketchup or sweet chilli sauce.",
+          "A premium portion of tender calamari tossed in a light, seasoned crust and fried until perfectly golden. Served with ketchup, sweet chilli sauce, or as per request.",
         descFr:
-          "Une belle portion de calamars tendres dans une croûte légère et assaisonnée, frits à la perfection. Servis avec ketchup ou sauce sweet chilli.",
+          "Une portion premium de calamars tendres, enrobés d'une croûte légère et assaisonnée, frits jusqu'à une dorure parfaite. Servis avec du ketchup, une sauce sweet chilli ou selon votre demande.",
         price: 375,
         photoId: "1476224203421-9ac39bcb3327",
       },
@@ -993,9 +1017,9 @@ export const menuCategories: Category[] = [
         en: "Crispy Golden Chicken Bites",
         fr: "Bouchées de Poulet Dorées",
         descEn:
-          "A large, shareable platter of tender chicken pieces seasoned with local island spices and fried to a perfect crunch. Served with ketchup or sweet chilli sauce.",
+          "A large, shareable platter of tender chicken pieces seasoned with local island spices and fried to a perfect crunch. Served with ketchup, sweet chilli sauce, or as per request.",
         descFr:
-          "Un grand plateau à partager de morceaux de poulet tendres, assaisonnés aux épices locales et frits jusqu'au croustillant parfait. Servis avec ketchup ou sauce sweet chilli.",
+          "Un grand plat à partager de morceaux de poulet tendres, assaisonnés aux épices locales de l'île et frits jusqu'à une croustillance parfaite. Servis avec du ketchup, une sauce sweet chilli ou selon votre demande.",
         price: 350,
         photoId: "1562967914-608f82629710",
       },
@@ -1004,9 +1028,9 @@ export const menuCategories: Category[] = [
         en: "Savoury Chicken Spring Rolls",
         fr: "Rouleaux de Printemps au Poulet",
         descEn:
-          "Crispy, golden pastry rolls generously packed with a seasoned chicken and vegetable filling. Served hot with ketchup or sweet chilli sauce.",
+          "Crispy, golden pastry rolls generously packed with a savoury, perfectly seasoned chicken and vegetable filling. Served hot with ketchup, sweet chilli sauce, or as per request.",
         descFr:
-          "Rouleaux dorés et croustillants, généreusement garnis de poulet et de légumes assaisonnés. Servis chauds avec ketchup ou sauce sweet chilli.",
+          "Rouleaux de pâte dorés et croustillants, généreusement garnis d'une farce savoureuse et parfaitement assaisonnée de poulet et de légumes. Servis chauds avec du ketchup, une sauce sweet chilli ou selon votre demande.",
         price: 180,
         photoId: "1606525437679-037aca74a3e9",
       },
@@ -1015,9 +1039,9 @@ export const menuCategories: Category[] = [
         en: "Melted Cheese Fries",
         fr: "Frites au Fromage Fondu",
         descEn:
-          "A generous sharing basket of crisp, hot fries tossed in fine sea salt and smothered in a rich, velvety melted cheese sauce.",
+          "A generous sharing basket of crisp, hot fries tossed in fine sea salt and completely smothered in a rich, velvety melted cheese sauce.",
         descFr:
-          "Un généreux panier à partager de frites chaudes et croustillantes, relevées de sel marin fin et nappées d'une sauce au fromage fondu onctueuse.",
+          "Un panier généreux à partager de frites chaudes et croustillantes, relevées de sel marin fin et entièrement nappées d'une sauce au fromage fondu riche et veloutée.",
         price: 220,
         photoId: "1573080496219-bb080dd4f877",
       },
@@ -1026,9 +1050,9 @@ export const menuCategories: Category[] = [
         en: "Traditional Island Samosas",
         fr: "Samoussas Traditionnels",
         descEn:
-          "A classic local favourite. Flaky golden pastry triangles filled with a perfectly spiced potato and herb filling. Served hot with ketchup or sweet chilli sauce.",
+          "A classic local favourite. Flaky, golden pastry triangles filled with a perfectly spiced potato and herb filling. Served hot and fresh with ketchup, sweet chilli sauce, or as per request.",
         descFr:
-          "Un grand classique local. Triangles de pâte feuilletée dorée garnis de pomme de terre et d'herbes parfaitement épicées. Servis chauds avec ketchup ou sauce sweet chilli.",
+          "Un classique local très apprécié. Triangles de pâte feuilletée dorée garnis d'une farce de pommes de terre et d'herbes parfaitement épicée. Servis chauds et frais avec du ketchup, une sauce sweet chilli ou selon votre demande.",
         price: 150,
         photoId: "1601050690597-df0568f70950",
       },
@@ -1062,9 +1086,9 @@ export const menuCategories: Category[] = [
         en: "The SKY Sunset Glow",
         fr: "Le Sunset Glow SKY",
         descEn:
-          "Our signature terrace creation. A vibrant tropical blend of sweet orange, crisp pineapple and sharp passion fruit, finished with fresh dragon fruit to capture the glowing hue of the evening sky.",
+          "Our signature terrace creation. A vibrant, tropical blend of sweet orange, crisp pineapple, and sharp passion fruit, finished with a delicate touch of fresh dragon fruit to capture the perfect glowing hue of the evening sky.",
         descFr:
-          "Notre création signature en terrasse. Un mélange tropical éclatant d'orange sucrée, d'ananas croquant et de fruit de la passion, relevé de fruit du dragon frais pour capturer la lueur du ciel du soir.",
+          "Notre création signature de la terrasse. Un mélange tropical éclatant d'orange sucrée, d'ananas croquant et de fruit de la passion vif, terminé par une délicate touche de fruit du dragon frais pour capturer la teinte rougeoyante parfaite du ciel du soir.",
         price: 300,
         photoId: "1609951651556-5334e2706168",
       },
@@ -1073,9 +1097,9 @@ export const menuCategories: Category[] = [
         en: "The SKY Blue Lagoon",
         fr: "Le Blue Lagoon SKY",
         descEn:
-          "A visually stunning beachfront drink. Freshly squeezed local lime juice and a touch of blue curaçao syrup, layered over crushed ice and topped with sparkling water. Garnished with fresh orange and garden mint.",
+          "A visually stunning beachfront drink. Freshly squeezed local lime juice and a touch of blue curaçao syrup, layered over crushed ice and topped with sparkling water. Garnished with a slice of fresh orange and a vibrant sprig of garden mint.",
         descFr:
-          "Une boisson spectaculaire en bord de mer. Jus de citron vert local fraîchement pressé et une touche de sirop de curaçao bleu, sur glace pilée et eau pétillante. Garni d'orange fraîche et de menthe du jardin.",
+          "Un cocktail de bord de mer spectaculaire. Jus de citron vert local fraîchement pressé et une touche de sirop de blue curaçao, versés sur de la glace pilée et allongés d'eau pétillante. Garni d'une tranche d'orange fraîche et d'un brin de menthe du jardin bien vert.",
         price: 290,
         photoId: "1587888637140-849b25d80ef9",
       },
@@ -1084,9 +1108,9 @@ export const menuCategories: Category[] = [
         en: "Sparkling Passion Fruit Mojito",
         fr: "Mojito Pétillant Fruit de la Passion",
         descEn:
-          "An intensely aromatic island classic. Muddled fresh garden mint and lime wedges, layered with tart passion fruit pulp, crushed ice and charged with premium soda.",
+          "An intensely aromatic island classic. Muddled fresh garden mint and lime wedges, layered with our signature tart passion fruit pulp, crushed ice, and charged with premium soda.",
         descFr:
-          "Un classique insulaire intensément aromatique. Menthe fraîche du jardin et quartiers de citron vert pilés, pulpe de fruit de la passion acidulée, glace pilée et soda premium.",
+          "Un classique de l'île intensément aromatique. Menthe fraîche du jardin et quartiers de citron vert pilés, superposés de notre pulpe de fruit de la passion signature bien acidulée, de glace pilée et allongés d'un soda premium.",
         price: 275,
         photoId: "1551538827-9c037cb4f32a",
       },
@@ -1095,9 +1119,9 @@ export const menuCategories: Category[] = [
         en: "The Ruby Sparkler",
         fr: "Le Ruby Sparkler",
         descEn:
-          "A sophisticated, crisp terrace favourite. Bright ruby grapefruit juice paired with a light touch of cold-pressed ginger and fresh snapped mint, built over ice and topped with premium tonic water.",
+          "A sophisticated, crisp terrace favourite. Bright ruby grapefruit juice paired with a subtle, light touch of cold-pressed ginger and fresh snapped mint, built over ice and topped with premium tonic water.",
         descFr:
-          "Un favori raffiné de la terrasse. Jus de pamplemousse rouge lumineux, une touche légère de gingembre pressé à froid et de la menthe fraîche, sur glace et allongé au tonic premium.",
+          "Un favori raffiné et vif de la terrasse. Jus de pamplemousse rose lumineux associé à une touche subtile et légère de gingembre pressé à froid et à de la menthe fraîchement cassée, monté sur glace et allongé d'un tonic premium.",
         price: 275,
         photoId: "1497534446932-c925b458314e",
       },

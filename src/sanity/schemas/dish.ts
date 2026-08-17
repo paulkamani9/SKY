@@ -1,9 +1,12 @@
 import { defineField, defineType } from "sanity";
 
+import { TRANSLATION_FIELDSET, translated } from "./translations";
+
 export const dish = defineType({
   name: "dish",
   title: "Item",
   type: "document",
+  fieldsets: [TRANSLATION_FIELDSET],
   fields: [
     defineField({
       name: "nameEn",
@@ -29,6 +32,9 @@ export const dish = defineType({
       type: "text",
       rows: 3,
     }),
+    ...translated("name", "Name"),
+    ...translated("description", "Description", { type: "text" }),
+    ...translated("priceNote", "Price note"),
     defineField({
       name: "price",
       title: "Price",

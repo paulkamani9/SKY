@@ -4,28 +4,36 @@ import { imageScales } from "@/lib/imageScale";
 
 import { client, urlFor } from "./client";
 
-export type Lang = "en" | "fr";
+export type { Lang } from "@/lib/i18n";
 
 export type Layout = "grid" | "list";
+
+/**
+ * A value written in every language. English and French are the two the menu
+ * was written in and are required everywhere; the other three are translations
+ * that may not have been filled in yet, and `pick` falls back when they are
+ * missing. See lib/i18n.
+ */
+type Translated<K extends string> = Record<`${K}En` | `${K}Fr`, string> &
+  Partial<Record<`${K}It` | `${K}De` | `${K}Ru`, string>>;
+
+/** The same, for values that are optional in every language. */
+type MaybeTranslated<K extends string> = Partial<
+  Record<`${K}En` | `${K}Fr` | `${K}It` | `${K}De` | `${K}Ru`, string>
+>;
 
 /**
  * View model handed to the UI. Images are already resolved to plain URLs here,
  * so components don't care whether a photo came from Sanity or from the
  * placeholder photo set.
  */
-export type Dish = {
+export type Dish = Translated<"name"> &
+  /** Description, price note, and the section sub-heading this item sits under
+      ("Premium Gelato") — all optional, all translated. */
+  MaybeTranslated<"description" | "priceNote" | "group"> & {
   _id: string;
-  nameEn: string;
-  nameFr: string;
-  descriptionEn?: string;
-  descriptionFr?: string;
   /** Null for items priced on selection — show the price note instead. */
   price: number | null;
-  priceNoteEn?: string;
-  priceNoteFr?: string;
-  /** Optional heading within a section, e.g. "Premium Gelato". */
-  groupEn?: string;
-  groupFr?: string;
   available: boolean;
   imageUrl: string | null;
   imageUrlLarge: string | null;
@@ -43,29 +51,29 @@ export type Dish = {
   imageScale?: number;
 };
 
-export type Category = {
+export type Category = Translated<"title"> &
+  /** `fruits` is one comma-separated line — the fruits on the display table
+      today, listed under the section so a guest composing their own bowl or
+      blend can see what there is to choose from. */
+  MaybeTranslated<"intro" | "footnote" | "fruits"> & {
   _id: string;
-  titleEn: string;
-  titleFr: string;
-  introEn?: string;
-  introFr?: string;
-  footnoteEn?: string;
-  footnoteFr?: string;
   layout: Layout;
+  /**
+   * One item per row on a phone, two on anything wider. For sections of a few
+   * showpiece items — the fruit bowls — where the standard two-up grid shrank
+   * each photo to a thumbnail.
+   */
+  wideTiles?: boolean;
   /** Widths for the section banner, or null when the section has no photo. */
   bannerSrcSet?: string | null;
   bannerUrl?: string | null;
   dishes: Dish[];
 };
 
-export type Settings = {
+export type Settings = MaybeTranslated<"tagline" | "notice"> & {
   name: string;
-  taglineEn?: string;
-  taglineFr?: string;
   currency: string;
   logoUrl: string | null;
-  noticeEn?: string;
-  noticeFr?: string;
 };
 
 type SanityImage = { asset?: { _ref?: string } } | null;
@@ -79,13 +87,12 @@ type RawSettings = Omit<Settings, "logoUrl"> & { logo?: SanityImage };
 
 const menuQuery = groq`*[_type == "category" && hidden != true] | order(order asc) {
   _id,
-  titleEn,
-  titleFr,
-  introEn,
-  introFr,
-  footnoteEn,
-  footnoteFr,
+  titleEn, titleFr, titleIt, titleDe, titleRu,
+  introEn, introFr, introIt, introDe, introRu,
+  footnoteEn, footnoteFr, footnoteIt, footnoteDe, footnoteRu,
+  fruitsEn, fruitsFr, fruitsIt, fruitsDe, fruitsRu,
   banner,
+  wideTiles,
   "layout": coalesce(layout, "grid"),
   // Unavailable items are dropped here rather than styled as sold out, so a
   // guest never reads about something they cannot order. They stay in the
@@ -94,24 +101,26 @@ const menuQuery = groq`*[_type == "category" && hidden != true] | order(order as
   "dishes": *[_type == "dish" && category._ref == ^._id && available != false]
     | order(coalesce(subcategory->order, 0) asc, order asc) {
     _id,
-    nameEn,
-    nameFr,
-    descriptionEn,
-    descriptionFr,
+    nameEn, nameFr, nameIt, nameDe, nameRu,
+    descriptionEn, descriptionFr, descriptionIt, descriptionDe, descriptionRu,
     price,
-    priceNoteEn,
-    priceNoteFr,
+    priceNoteEn, priceNoteFr, priceNoteIt, priceNoteDe, priceNoteRu,
     // The sub-section is the source of truth; the legacy free-text group is
     // the fallback for any item not yet migrated onto a reference.
     "groupEn": coalesce(subcategory->titleEn, groupEn),
     "groupFr": coalesce(subcategory->titleFr, groupFr),
+    "groupIt": subcategory->titleIt,
+    "groupDe": subcategory->titleDe,
+    "groupRu": subcategory->titleRu,
     "available": coalesce(available, true),
     image
   }
 }[count(dishes) > 0]`;
 
 const settingsQuery = groq`*[_type == "settings"][0]{
-  name, taglineEn, taglineFr, currency, logo, noticeEn, noticeFr
+  name, currency, logo,
+  taglineEn, taglineFr, taglineIt, taglineDe, taglineRu,
+  noticeEn, noticeFr, noticeIt, noticeDe, noticeRu
 }`;
 
 function hasAsset(image: SanityImage | undefined): boolean {
