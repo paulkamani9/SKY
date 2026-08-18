@@ -17,6 +17,7 @@ import path from "node:path";
 import { createClient } from "@sanity/client";
 
 import { menuCategories, menuSettings } from "../src/lib/menuContent";
+import { orderRanks } from "../src/sanity/orderRank";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
@@ -108,6 +109,26 @@ async function seed() {
 
   const tx = client.transaction();
 
+  // Sort keys for the Studio's drag-and-drop, in menu order. Dish ranks are one
+  // sequence across the whole menu — the plugin ranks a document type as a
+  // whole — so a section's items stay contiguous within it.
+  const sectionRanks = orderRanks(menuCategories.length);
+  const dishRanks = orderRanks(
+    menuCategories.reduce((n, c) => n + c.dishes.length, 0),
+  );
+  let dishRankIndex = 0;
+
+  // The fruits on the display table, named once for the whole menu.
+  const fruitSource = menuCategories.find((c) => c.fruitsEn);
+  if (fruitSource) {
+    tx.createOrReplace({
+      _id: "fruit-selection",
+      _type: "fruitSelection",
+      fruitsEn: fruitSource.fruitsEn,
+      fruitsFr: fruitSource.fruitsFr,
+    });
+  }
+
   tx.createOrReplace({
     _id: "settings",
     _type: "settings",
@@ -133,6 +154,9 @@ async function seed() {
       footnoteEn: category.footnoteEn,
       footnoteFr: category.footnoteFr,
       layout: category.layout,
+      wideTiles: Boolean(category.wideTiles),
+      showFruits: Boolean(category.fruitsEn),
+      orderRank: sectionRanks[sectionIndex],
       order: sectionIndex + 1,
       hidden: false,
     });
@@ -192,6 +216,7 @@ async function seed() {
               },
             }
           : {}),
+        orderRank: dishRanks[dishRankIndex++],
         order: dishIndex + 1,
         available: true,
         ...(image ? { image } : {}),

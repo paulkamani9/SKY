@@ -43,17 +43,20 @@ read.
   showcase. Leave **Price** empty and fill in **Price note** instead
   ("Based on selection", "As priced"); the note renders where the price would.
 - **Sub-groups inside a section** — "Premium Gelato", "Iced & Chilled Coffee".
-  Set the **Sub-group** field; items sharing one are listed together under a
-  heading. Items must be ordered so a group's items sit next to each other.
+  Set the **Group inside the section** field; items sharing one are listed
+  together under a heading, which appears where the group's first item sits.
+  Groups are collected by name, not by adjacency, so an item dragged out of its
+  run rejoins its group rather than printing the heading twice.
 - **Section intros and footnotes** — "Served daily until 13:00", the milk
   alternatives note under Coffee.
 - **A fruit list under a section** — the fruits on the display table today,
   drawn as chips under Fruit Bowls and Smoothies so a guest composing their own
-  bowl or blend can see what there is. One comma-separated line per language in
-  the **Fruit list** field; blank on the sections that don't need it. It is
-  deliberately a section field and not part of any item description: the fruit
-  turns with the season, and this is the one box to edit when it does. The
-  English line alone is enough — the other languages fall back to it.
+  bowl or blend can see what there is. It lives in one document —
+  **Today → Today's fruit selection** — and sections opt in with **Show today's
+  fruit list**, so a seasonal change is one edit in one box and the two sections
+  cannot drift apart. The English line alone is enough; the other languages fall
+  back to it. The query copies the list onto each opted-in section, so the
+  rendering code reads it off the section either way.
 - **One item per row on a phone** — the **wideTiles** switch on a section, for
   the two fruit bowls, whose photos are the point and were being shrunk to
   thumbnails by the standard two-up grid.
@@ -78,8 +81,8 @@ npm run migrate:languages
 
 Unlike `npm run seed`, it only writes translation fields — never a price, photo,
 order or availability — so it is safe to re-run against a live dataset. In the
-Studio the three sit in a collapsed **Italiano · Deutsch · Русский** panel on
-each item, section and sub-section, under the English and French fields.
+Studio the three sit behind an **Other languages** tab on each item, section
+and sub-section, beside the English and French fields.
 
 > They are careful translations, not copy written by a native speaker. Worth a
 > read-through by someone who speaks the language before this goes to print.
@@ -130,9 +133,16 @@ to see it.
 npm run seed
 ```
 
-This creates the 11 sections, 85 items and the settings document, and uploads the
-placeholder photos so the Studio matches what is on screen. Add `-- --no-photos`
-to seed text only.
+This creates the 11 sections, 85 items, the settings and fruit-selection
+documents and the drag-ordering sort keys, and uploads the placeholder photos so
+the Studio matches what is on screen. Add `-- --no-photos` to seed text only.
+Follow it with `npm run migrate:languages` for Italian, German and Russian.
+
+Two one-off migrations exist for datasets seeded before those features, both
+with a `--dry-run` first: `npm run migrate:order` (numeric order → drag-and-drop
+sort keys) and `npm run migrate:fruit` (per-section fruit lists → the single
+document). `npm run menu:order` prints the menu in render order — run it before
+and after any ordering change and diff the two.
 
 Every document uses a fixed id, so re-running updates the same documents instead
 of duplicating them — which also means it overwrites Studio edits. Run it to
@@ -174,18 +184,43 @@ level of the dining area.
 
 ## Day-to-day for staff
 
+The Studio is arranged by how often a job comes up, not by document type. Three
+entries, in order: **Today**, **Sections & items**, **Setup**.
+
 | Task | Where |
 | --- | --- |
-| Change a price | Studio → Items → open item → Price |
-| Mark something sold out | Studio → Items → toggle **Available today** off |
-| Add or replace a photo | Studio → Items → Photo |
-| Reorder the menu | Studio → **Order** field on sections and items |
-| Switch a section to a list | Studio → Menu sections → **Layout** |
-| Hide a whole section | Studio → Menu sections → **Hide this section** |
-| Change the notice at the top | Studio → Restaurant settings → Notice |
+| Mark something sold out | Open the item → **Ran out — take off the menu** |
+| Put it back | **Today → Sold out right now** → **Back on the menu** |
+| Change the fruit selection | **Today → Today's fruit selection** — one box, one edit |
+| Change a price | **Sections & items** → section → item → **Price** |
+| Add or replace a photo | Same item → **Photo** (transparent-background PNG — see [docs/photo-briefs.md](docs/photo-briefs.md)) |
+| Add an item | Section's **⋮** menu → **New item in this section** |
+| Reorder items, or sections | Drag them — items inside a section, sections under **Setup → Menu sections** |
+| Switch a section to a list | **Setup → Menu sections** → **Layout** |
+| Hide a whole section | **Setup → Menu sections** → **Hide this section** |
+| Change the notice at the top | **Setup → Restaurant settings** → **Notice** |
 
-Turning **Available today** off leaves the item visible but greyed out and
-labelled *Sold out / Épuisé* — guests see it exists rather than wondering.
+Turning an item off removes it from the menu rather than greying it out — a
+guest never reads about something they cannot order. It stays in the Studio,
+listed under **Today → Sold out right now**, until it goes back on.
+
+Item forms have three tabs: **Item** (what the guest reads and pays), **Other
+languages**, and **Where it sits** (section and group, set once at creation).
+
+There is a plain-language guide written for the owner, with no Sanity
+vocabulary in it, at [docs/editing-the-menu.md](docs/editing-the-menu.md).
+
+### Ordering
+
+Position is stored as a `orderRank` sort key written by
+[@sanity/orderable-document-list](https://github.com/sanity-io/plugins/tree/main/plugins/@sanity/orderable-document-list),
+so dragging one item rewrites one document rather than renumbering the list.
+Sub-sections carry no order of their own: a group's heading appears where its
+first item sits, which is what lets a whole section be dragged as one flat list.
+
+The numeric `order` field it replaced is hidden but still in the data, and the
+menu query still falls back to it for any document that has somehow not been
+ranked.
 
 ## Design
 

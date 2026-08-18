@@ -41,21 +41,30 @@ type Group = {
 
 function groupDishes(category: Category, lang: Lang, currency: string): Group[] {
   const groups: Group[] = [];
+  // Collected by name rather than by adjacency. Items are dragged into order in
+  // the Studio one flat list at a time, so nothing stops "Premium Gelato" from
+  // ending up either side of a sorbet — and adjacency printed that heading
+  // twice. A group appears once, where its first item sits.
+  const byKey = new Map<string, Group>();
 
   for (const dish of category.dishes) {
-    const title = pick(lang, dish, "group");
     const key = dish.groupEn || dish.groupFr || "";
-    const last = groups[groups.length - 1];
+    const existing = byKey.get(key);
 
-    if (last && last.key === key) last.dishes.push(dish);
-    else
-      groups.push({
-        key,
-        title,
-        dishes: [dish],
-        sharedPrice: null,
-        sharedIsNumeric: false,
-      });
+    if (existing) {
+      existing.dishes.push(dish);
+      continue;
+    }
+
+    const group: Group = {
+      key,
+      title: pick(lang, dish, "group"),
+      dishes: [dish],
+      sharedPrice: null,
+      sharedIsNumeric: false,
+    };
+    byKey.set(key, group);
+    groups.push(group);
   }
 
   for (const group of groups) {

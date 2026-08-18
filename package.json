@@ -10,11 +10,16 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "migrate:subcategories": "tsx --env-file=.env.local scripts/subcategories.ts",
-    "migrate:languages": "tsx --env-file=.env.local scripts/languages.ts"
+    "migrate:languages": "tsx --env-file=.env.local scripts/languages.ts",
+    "migrate:order": "tsx --env-file=.env.local scripts/order-ranks.ts",
+    "migrate:fruit": "tsx --env-file=.env.local scripts/fruit-selection.ts",
+    "menu:order": "tsx --env-file=.env.local scripts/menu-order.ts"
   },
   "dependencies": {
     "@sanity/image-url": "^1.2.0",
+    "@sanity/orderable-document-list": "^2.0.20",
     "@sanity/vision": "^6.9.1",
+    "lexorank": "^1.0.5",
     "next": "^16.3.0",
     "next-sanity": "^13.3.1",
     "react": "^19.2.0",

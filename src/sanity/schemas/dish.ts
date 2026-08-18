@@ -1,23 +1,35 @@
+import { orderRankField, orderRankOrdering } from "@sanity/orderable-document-list";
 import { defineField, defineType } from "sanity";
 
-import { TRANSLATION_FIELDSET, translated } from "./translations";
+import { TRANSLATION_GROUP, translated } from "./translations";
 
 export const dish = defineType({
   name: "dish",
-  title: "Item",
+  title: "Menu item",
   type: "document",
-  fieldsets: [TRANSLATION_FIELDSET],
+  /*
+   * Three tabs, in the order the work happens: what the guest reads and pays,
+   * then the other languages, then where it sits in the menu — which is set
+   * once when the item is created and rarely touched again.
+   */
+  groups: [
+    { name: "item", title: "Item", default: true },
+    TRANSLATION_GROUP,
+    { name: "placement", title: "Where it sits" },
+  ],
   fields: [
     defineField({
       name: "nameEn",
       title: "Name (English)",
       type: "string",
+      group: "item",
       validation: (r) => r.required(),
     }),
     defineField({
       name: "nameFr",
       title: "Name (French)",
       type: "string",
+      group: "item",
       validation: (r) => r.required(),
     }),
     defineField({
@@ -25,50 +37,79 @@ export const dish = defineType({
       title: "Description (English)",
       type: "text",
       rows: 3,
+      group: "item",
+      description:
+        "The line a guest reads on the back of the tile, or under the name in a list section.",
     }),
     defineField({
       name: "descriptionFr",
       title: "Description (French)",
       type: "text",
       rows: 3,
+      group: "item",
     }),
-    ...translated("name", "Name"),
-    ...translated("description", "Description", { type: "text" }),
-    ...translated("priceNote", "Price note"),
     defineField({
       name: "price",
       title: "Price",
       type: "number",
+      group: "item",
       description:
-        "Numbers only — the currency symbol comes from settings. Leave empty for items priced on selection, then fill in the note below.",
+        'Numbers only — "Rs" comes from Restaurant settings. Leave empty for anything priced on the day, then fill in the price note below.',
       validation: (r) => r.min(0),
     }),
     defineField({
       name: "priceNoteEn",
       title: "Price note (English)",
       type: "string",
+      group: "item",
       description:
-        'Shown instead of a price, e.g. "Based on selection" or "As priced".',
+        'Shown where the price would go, for items with no fixed price — "Based on selection", "As priced".',
     }),
     defineField({
       name: "priceNoteFr",
       title: "Price note (French)",
       type: "string",
+      group: "item",
     }),
+    defineField({
+      name: "image",
+      title: "Photo",
+      type: "image",
+      group: "item",
+      options: { hotspot: true },
+      description:
+        "A cut-out photo on a transparent background (PNG), roughly square, subject centred with a little air around it, at least 1200px. A photo with a white background will show as a white box on the page — see docs/photo-briefs.md. Optional: without one the item shows as text on a SKY plate.",
+    }),
+    defineField({
+      name: "available",
+      title: "Available today",
+      type: "boolean",
+      group: "item",
+      description:
+        "Turn off when it runs out and the item disappears from the menu. It stays here — turn it back on to bring it back.",
+      initialValue: true,
+    }),
+
+    ...translated("name", "Name"),
+    ...translated("description", "Description", { type: "text" }),
+    ...translated("priceNote", "Price note"),
+
     defineField({
       name: "category",
       title: "Menu section",
       type: "reference",
       to: [{ type: "category" }],
+      group: "placement",
       validation: (r) => r.required(),
     }),
     defineField({
       name: "subcategory",
-      title: "Sub-section",
+      title: "Group inside the section",
       type: "reference",
       to: [{ type: "subcategory" }],
+      group: "placement",
       description:
-        'Optional group within the section, e.g. "Premium Gelato". Leave empty for items that sit directly under the section title.',
+        'Optional heading within the section, e.g. "Premium Gelato". Leave empty for items that sit directly under the section title.',
       // Only offer sub-sections belonging to the section already chosen above,
       // so a Coffee item can never be filed under a Gelato group.
       options: {
@@ -84,39 +125,17 @@ export const dish = defineType({
         },
       },
     }),
-    // Superseded by the reference above. Kept so pre-migration data is never
-    // lost, and read at render time only when an item has no sub-section yet.
+    // Position is dragged in "Sections & items", not typed. The rank field is
+    // hidden by the plugin; `order` is what it replaced, kept only so nothing
+    // is lost if we ever need to read the old numbers.
+    orderRankField({ type: "dish", hidden: true }),
+    defineField({ name: "order", type: "number", hidden: true }),
+    // Superseded by the sub-section reference. Kept so pre-migration data is
+    // never lost, and read at render time only when an item has no reference.
     defineField({ name: "groupEn", title: "Sub-group (legacy)", type: "string", hidden: true }),
     defineField({ name: "groupFr", title: "Sub-group (legacy, FR)", type: "string", hidden: true }),
-    defineField({
-      name: "order",
-      title: "Order within section",
-      type: "number",
-      initialValue: 1,
-      validation: (r) => r.required().integer(),
-    }),
-    defineField({
-      name: "image",
-      title: "Photo",
-      type: "image",
-      options: { hotspot: true },
-    }),
-    defineField({
-      name: "available",
-      title: "Available today",
-      type: "boolean",
-      description:
-        "Turn off when it runs out and the item disappears from the menu. It stays here — turn it back on to bring it back.",
-      initialValue: true,
-    }),
   ],
-  orderings: [
-    {
-      name: "orderAsc",
-      title: "Menu order",
-      by: [{ field: "order", direction: "asc" }],
-    },
-  ],
+  orderings: [orderRankOrdering],
   preview: {
     select: {
       title: "nameEn",
@@ -143,7 +162,7 @@ export const dish = defineType({
         .join(" › ");
       return {
         title: `${title}${available === false ? " — SOLD OUT" : ""}`,
-        subtitle: `${path} · ${price ?? priceNote ?? "no price"}`,
+        subtitle: `${path} · ${price ? `Rs ${price}` : (priceNote ?? "no price")}`,
         media,
       };
     },

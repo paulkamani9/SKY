@@ -1,35 +1,43 @@
 import { defineField, defineType } from "sanity";
 
-import { TRANSLATION_FIELDSET, translated } from "./translations";
+import { TRANSLATION_GROUP, translated } from "./translations";
 
 export const settings = defineType({
   name: "settings",
   title: "Restaurant settings",
   type: "document",
   // Singleton: only one of these should ever exist.
-  fieldsets: [TRANSLATION_FIELDSET],
+  groups: [
+    { name: "basics", title: "Restaurant", default: true },
+    TRANSLATION_GROUP,
+  ],
   fields: [
     defineField({
       name: "name",
       title: "Restaurant name",
       type: "string",
+      group: "basics",
       validation: (r) => r.required(),
     }),
     defineField({
       name: "taglineEn",
       title: "Tagline (English)",
       type: "string",
-      description: "Optional short line under the name.",
+      group: "basics",
+      description: "The small line under the name at the top of the menu.",
     }),
     defineField({
       name: "taglineFr",
       title: "Tagline (French)",
       type: "string",
+      group: "basics",
     }),
     defineField({
       name: "currency",
       title: "Currency symbol",
       type: "string",
+      group: "basics",
+      description: "Printed before every price on the menu.",
       initialValue: "Rs",
       validation: (r) => r.required(),
     }),
@@ -37,7 +45,8 @@ export const settings = defineType({
       name: "logo",
       title: "Logo",
       type: "image",
-      description: "Optional. Shown at the top of the menu.",
+      group: "basics",
+      description: "Optional. Shown as a round badge at the top of the menu.",
       options: { hotspot: true },
     }),
     defineField({
@@ -45,14 +54,16 @@ export const settings = defineType({
       title: "Notice (English)",
       type: "text",
       rows: 2,
+      group: "basics",
       description:
-        "Optional banner, e.g. 'Prices include VAT' or 'Kitchen closes at 22:00'.",
+        "Optional line about the menu as a whole, e.g. 'Prices include VAT'.",
     }),
     defineField({
       name: "noticeFr",
       title: "Notice (French)",
       type: "text",
       rows: 2,
+      group: "basics",
     }),
     ...translated("tagline", "Tagline"),
     ...translated("notice", "Notice", { type: "text", rows: 2 }),

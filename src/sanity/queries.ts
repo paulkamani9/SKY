@@ -54,10 +54,14 @@ export type Dish = Translated<"name"> &
 export type Category = Translated<"title"> &
   /** `fruits` is one comma-separated line — the fruits on the display table
       today, listed under the section so a guest composing their own bowl or
-      blend can see what there is to choose from. */
+      blend can see what there is to choose from. It is stored once, on the
+      fruit-selection document, and copied onto every section that asks for it
+      (`showFruits`) — so the UI reads it off the section either way. */
   MaybeTranslated<"intro" | "footnote" | "fruits"> & {
   _id: string;
   layout: Layout;
+  /** Whether to print today's fruit list under this section. */
+  showFruits?: boolean;
   /**
    * One item per row on a phone, two on anything wider. For sections of a few
    * showpiece items — the fruit bowls — where the standard two-up grid shrank
@@ -85,21 +89,32 @@ type RawCategory = Omit<Category, "dishes" | "bannerSrcSet" | "bannerUrl"> & {
 };
 type RawSettings = Omit<Settings, "logoUrl"> & { logo?: SanityImage };
 
-const menuQuery = groq`*[_type == "category" && hidden != true] | order(order asc) {
+/*
+ * Order comes from `orderRank`, the sort key the Studio's drag-and-drop writes.
+ * `order` is the numeric field it replaced: coalesced so a document that has
+ * somehow not been ranked yet still lands where it used to rather than jumping
+ * to the top of the menu.
+ */
+const menuQuery = groq`{
+  "categories": *[_type == "category" && hidden != true]
+    | order(coalesce(orderRank, "9") asc, order asc) {
   _id,
   titleEn, titleFr, titleIt, titleDe, titleRu,
   introEn, introFr, introIt, introDe, introRu,
   footnoteEn, footnoteFr, footnoteIt, footnoteDe, footnoteRu,
-  fruitsEn, fruitsFr, fruitsIt, fruitsDe, fruitsRu,
   banner,
   wideTiles,
+  showFruits,
   "layout": coalesce(layout, "grid"),
   // Unavailable items are dropped here rather than styled as sold out, so a
   // guest never reads about something they cannot order. They stay in the
   // Studio untouched — flipping "Available today" back on restores them.
   // "!= false" rather than "== true" so items predating the field still show.
+  // One flat order per section — the order the Studio's list shows, dragged by
+  // hand. Sub-sections have no order of their own: a group's heading appears
+  // where its first item sits. See groupDishes in MenuView.
   "dishes": *[_type == "dish" && category._ref == ^._id && available != false]
-    | order(coalesce(subcategory->order, 0) asc, order asc) {
+    | order(coalesce(orderRank, "9") asc, coalesce(subcategory->order, 0) asc, order asc) {
     _id,
     nameEn, nameFr, nameIt, nameDe, nameRu,
     descriptionEn, descriptionFr, descriptionIt, descriptionDe, descriptionRu,
@@ -115,7 +130,11 @@ const menuQuery = groq`*[_type == "category" && hidden != true] | order(order as
     "available": coalesce(available, true),
     image
   }
-}[count(dishes) > 0]`;
+}[count(dishes) > 0],
+  "fruits": *[_id == "fruit-selection"][0]{
+    fruitsEn, fruitsFr, fruitsIt, fruitsDe, fruitsRu
+  }
+}`;
 
 const settingsQuery = groq`*[_type == "settings"][0]{
   name, currency, logo,
@@ -201,14 +220,19 @@ function resolveDish(raw: RawDish): ResolvedDish {
 // holding at the table.
 export async function getMenu(): Promise<Category[]> {
   try {
-    const raw = await client.fetch<RawCategory[]>(
-      menuQuery,
-      {},
-      { next: { revalidate: 60 } },
-    );
+    const raw = await client.fetch<{
+      categories: RawCategory[];
+      fruits: MaybeTranslated<"fruits"> | null;
+    }>(menuQuery, {}, { next: { revalidate: 60 } });
 
-    const categories = (raw ?? []).map(({ banner, ...c }) => ({
+    // Today's fruit is one document, written once when the season turns, and
+    // copied here onto each section that prints it. Sections carry the values
+    // from this point on, so nothing downstream knows there is a singleton.
+    const fruits = raw?.fruits ?? {};
+
+    const categories = (raw?.categories ?? []).map(({ banner, ...c }) => ({
       ...c,
+      ...(c.showFruits ? fruits : null),
       ...resolveBanner(banner),
       dishes: c.dishes.map(resolveDish),
     }));
