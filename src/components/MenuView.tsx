@@ -361,20 +361,31 @@ export function MenuView({ categories, settings }: Props) {
           />
         ))}
 
-        <footer className="mt-14 pb-2 text-center">
+        <footer className="mt-14 pb-2">
           <div className="gold-rule mx-auto h-px w-24 opacity-50" />
-          <p className="mt-5 text-[12px]" style={{ color: "var(--muted-dim)" }}>
-            {t(lang, "builtBy")}{" "}
-            <a
-              href="https://paulkamani9.github.io/paulkamani/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80"
-              style={{ color: "var(--gold)" }}
-            >
-              Paul Kamani
-            </a>
-          </p>
+
+          {/* The VAT line is the last thing a guest reads about price, so it
+              sits centred where the eye already is. The build credit belongs
+              to the page rather than to the menu, so it steps aside to the
+              corner — on one row where there is width for it, stacked under
+              the notice on a phone. */}
+          <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
+            <p className="text-[12px]" style={{ color: "var(--muted)" }}>
+              {t(lang, "vat")}
+            </p>
+            <p className="text-[12px]" style={{ color: "var(--muted-dim)" }}>
+              {t(lang, "builtBy")}{" "}
+              <a
+                href="https://paulkamani9.github.io/paulkamani/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80"
+                style={{ color: "var(--gold)" }}
+              >
+                Paul Kamani
+              </a>
+            </p>
+          </div>
         </footer>
       </main>
 
