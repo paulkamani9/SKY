@@ -365,27 +365,30 @@ export function MenuView({ categories, settings }: Props) {
           <div className="gold-rule mx-auto h-px w-24 opacity-50" />
 
           {/* The VAT line is the last thing a guest reads about price, so it
-              sits centred where the eye already is. The build credit belongs
-              to the page rather than to the menu, so it steps aside to the
-              corner — on one row where there is width for it, stacked under
-              the notice on a phone. */}
-          <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-            <p className="text-[12px]" style={{ color: "var(--muted)" }}>
-              {t(lang, "vat")}
-            </p>
-            <p className="text-[12px]" style={{ color: "var(--muted-dim)" }}>
-              {t(lang, "builtBy")}{" "}
-              <a
-                href="https://paulkamani9.github.io/paulkamani/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80"
-                style={{ color: "var(--gold)" }}
-              >
-                Paul Kamani
-              </a>
-            </p>
-          </div>
+              keeps the centre and is set larger than the credit beneath it.
+              The build credit belongs to the page rather than to the menu, so
+              it sits quietly in the right-hand corner. */}
+          <p
+            className="mt-5 text-center text-[14px]"
+            style={{ color: "var(--muted)" }}
+          >
+            {t(lang, "vat")}
+          </p>
+          <p
+            className="mt-3 text-right text-[11px]"
+            style={{ color: "var(--muted-dim)" }}
+          >
+            {t(lang, "builtBy")}{" "}
+            <a
+              href="https://paulkamani9.github.io/paulkamani/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80"
+              style={{ color: "var(--gold)" }}
+            >
+              Paul Kamani
+            </a>
+          </p>
         </footer>
       </main>
 
