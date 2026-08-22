@@ -40,7 +40,6 @@ export const strings = {
     fruits: "Fruits available",
     empty: "The menu is being updated. Please ask a member of staff.",
     vat: "All prices include VAT.",
-    builtBy: "Menu by",
   },
   fr: {
     soldOut: "Épuisé",
@@ -52,7 +51,6 @@ export const strings = {
     empty:
       "La carte est en cours de mise à jour. Merci de demander au personnel.",
     vat: "Tous les prix sont TVA comprise.",
-    builtBy: "Carte réalisée par",
   },
   it: {
     soldOut: "Esaurito",
@@ -63,7 +61,6 @@ export const strings = {
     fruits: "Frutta disponibile",
     empty: "Il menù è in aggiornamento. Chieda pure a un membro del personale.",
     vat: "Tutti i prezzi includono l'IVA.",
-    builtBy: "Menù a cura di",
   },
   de: {
     soldOut: "Ausverkauft",
@@ -75,7 +72,6 @@ export const strings = {
     empty:
       "Die Karte wird gerade aktualisiert. Bitte fragen Sie unser Personal.",
     vat: "Alle Preise inklusive MwSt.",
-    builtBy: "Karte von",
   },
   ru: {
     soldOut: "Закончилось",
@@ -86,7 +82,6 @@ export const strings = {
     fruits: "Доступные фрукты",
     empty: "Меню обновляется. Пожалуйста, обратитесь к персоналу.",
     vat: "Все цены включают НДС.",
-    builtBy: "Меню создано",
   },
 } satisfies Record<Lang, Record<string, string>>;
 
