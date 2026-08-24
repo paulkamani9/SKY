@@ -23,6 +23,11 @@ To take something off, open the item (see *Sections & items* below) and press
 disappears from the menu straight away and stays here, waiting, until you put it
 back. Nothing is deleted, ever.
 
+Anything added to the menu but not being served yet waits in the same place —
+the new sorbets (Melon, Avocado, Letchi, Watermelon, Bergamot) sit here until
+the first batch is churned. **Back on the menu** is the button that puts one
+out.
+
 ### The fruit has changed
 
 **Today → Today's fruit selection** is one box. Type the fruits you have,

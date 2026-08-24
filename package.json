@@ -13,7 +13,8 @@
     "migrate:languages": "tsx --env-file=.env.local scripts/languages.ts",
     "migrate:order": "tsx --env-file=.env.local scripts/order-ranks.ts",
     "migrate:fruit": "tsx --env-file=.env.local scripts/fruit-selection.ts",
-    "menu:order": "tsx --env-file=.env.local scripts/menu-order.ts"
+    "menu:order": "tsx --env-file=.env.local scripts/menu-order.ts",
+    "menu:new-items": "tsx --env-file=.env.local scripts/new-items.ts"
   },
   "dependencies": {
     "@sanity/image-url": "^1.2.0",
