@@ -38,6 +38,13 @@ type Seed = {
   noteFr?: string;
   groupEn?: string;
   groupFr?: string;
+  /**
+   * Off for an item that is on the menu but not being served yet — a flavour
+   * the kitchen has announced but not churned. Sanity drops it from the menu
+   * until "Available today" is switched back on; the fallback menu here marks
+   * it sold out. Defaults to on.
+   */
+  available?: boolean;
   photoId?: string;
   /**
    * A transparent cut-out served from /public — what the grid is designed
@@ -76,7 +83,7 @@ function item(seed: Seed): Dish {
     groupEn: seed.groupEn,
     groupFr: seed.groupFr,
     ...translationsFor(seed),
-    available: true,
+    available: seed.available ?? true,
     ...(seed.cutout
       ? { imageUrl: seed.cutout, imageUrlLarge: seed.cutout }
       : seed.photoId
@@ -194,6 +201,65 @@ export const menuCategories: Category[] = [
         groupFr: "Sorbets Tropicaux (Sans Lactose)",
         cutout: "/fruit/guava.svg",
       },
+      /*
+       * The five flavours the kitchen announced on 23 August, off the menu
+       * until the first batch is churned — see the `available` note above.
+       */
+      {
+        id: "gel-melon",
+        en: "Melon",
+        fr: "Melon",
+        descEn: "Cool, mellow, and quietly sweet.",
+        descFr: "Frais, doux et délicatement sucré.",
+        price: 125,
+        groupEn: "Tropical Sorbets (Dairy-Free)",
+        groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        available: false,
+      },
+      {
+        id: "gel-avocado",
+        en: "Avocado",
+        fr: "Avocat",
+        descEn: "Silky, gently nutty, and unexpectedly refreshing.",
+        descFr: "Soyeux, légèrement noiseté et étonnamment rafraîchissant.",
+        price: 125,
+        groupEn: "Tropical Sorbets (Dairy-Free)",
+        groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        available: false,
+      },
+      {
+        id: "gel-letchi",
+        en: "Letchi",
+        fr: "Letchi",
+        descEn: "Delicate, floral, and unmistakably of the island.",
+        descFr: "Délicat, floral et résolument insulaire.",
+        price: 125,
+        groupEn: "Tropical Sorbets (Dairy-Free)",
+        groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        available: false,
+      },
+      {
+        id: "gel-watermelon",
+        en: "Watermelon",
+        fr: "Pastèque",
+        descEn: "Light, juicy, and thirst-quenching.",
+        descFr: "Léger, juteux et désaltérant.",
+        price: 125,
+        groupEn: "Tropical Sorbets (Dairy-Free)",
+        groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        available: false,
+      },
+      {
+        id: "gel-bergamot",
+        en: "Bergamot",
+        fr: "Bergamote",
+        descEn: "Bright, perfumed citrus with a clean finish.",
+        descFr: "Agrume parfumé et éclatant, à la finale nette.",
+        price: 125,
+        groupEn: "Tropical Sorbets (Dairy-Free)",
+        groupFr: "Sorbets Tropicaux (Sans Lactose)",
+        available: false,
+      },
       {
         id: "gel-vanilla",
         en: "Classic Vanilla",
@@ -254,6 +320,27 @@ export const menuCategories: Category[] = [
         groupEn: "Premium Gelato",
         groupFr: "Glaces Premium",
         photoId: "1501443762994-82bd5dace89a",
+      },
+      /*
+       * Filed here rather than under Coffee: the whole point is choosing a
+       * flavour, and the flavours are the eleven lines directly above it.
+       *
+       * PRICE NOT SET — the owner has not quoted one, so it shows the note
+       * instead of a number. Put the real price in the Studio and the note
+       * disappears on its own.
+       */
+      {
+        id: "gel-affogato",
+        en: "Affogato",
+        fr: "Affogato",
+        descEn:
+          "The gelato of your choice, drowned at the counter under a freshly pulled shot of our specialty espresso. Pick any flavour from above.",
+        descFr:
+          "La glace de votre choix, noyée au comptoir sous un espresso de spécialité fraîchement extrait. Choisissez le parfum qui vous tente parmi ceux ci-dessus.",
+        noteEn: "Ask our team",
+        noteFr: "Demandez à notre équipe",
+        groupEn: "Affogato",
+        groupFr: "Affogato",
       },
     ],
   ),
@@ -667,6 +754,16 @@ export const menuCategories: Category[] = [
         price: 250,
       },
       {
+        id: "bf-croque",
+        en: "The Croque Monsieur",
+        fr: "Le Croque-Monsieur",
+        descEn:
+          "The French café classic, toasted golden. Chicken ham and melted cheese pressed between thick-cut bread. A vegetarian option is available on request.",
+        descFr:
+          "Le classique des cafés français, gratiné et doré. Jambon de volaille et fromage fondu entre deux tranches épaisses de pain de mie. Une version végétarienne est disponible sur demande.",
+        price: 270,
+      },
+      {
         id: "bf-salmon",
         en: "Gourmet Smoked Salmon Croissant",
         fr: "Croissant Gourmet au Saumon Fumé",
@@ -1011,6 +1108,16 @@ export const menuCategories: Category[] = [
           "Une portion premium de calamars tendres, enrobés d'une croûte légère et assaisonnée, frits jusqu'à une dorure parfaite. Servis avec du ketchup, une sauce sweet chilli ou selon votre demande.",
         price: 375,
         photoId: "1476224203421-9ac39bcb3327",
+      },
+      {
+        id: "bite-fish",
+        en: "Golden Crispy Fish & Chips",
+        fr: "Fish & Chips Croustillant",
+        descEn:
+          "Fresh local fish fillet coated in panko breadcrumbs and fried golden brown. Served with seasoned French fries, our classic homemade sauce, and a fresh lemon wedge.",
+        descFr:
+          "Filet de poisson local frais pané à la chapelure panko et frit jusqu'à une belle dorure. Servi avec des frites assaisonnées, notre sauce maison classique et un quartier de citron frais.",
+        price: 525,
       },
       {
         id: "bite-chicken",

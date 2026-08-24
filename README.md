@@ -62,8 +62,8 @@ read.
   thumbnails by the standard two-up grid.
 - **Names under the tile** — every photo grid but the first prints the item name
   under the picture, above the price. Gelato & Sorbets alone keeps its names on
-  the back of the tile: eleven scoops that the pictures carry, where the flip is
-  what tells a guest the menu is worth touching.
+  the back of the tile: a wall of scoops that the pictures carry, where the flip
+  is what tells a guest the menu is worth touching.
 
 ### The other three languages
 
@@ -133,10 +133,38 @@ to see it.
 npm run seed
 ```
 
-This creates the 11 sections, 85 items, the settings and fruit-selection
+This creates the 11 sections, 93 items, the settings and fruit-selection
 documents and the drag-ordering sort keys, and uploads the placeholder photos so
 the Studio matches what is on screen. Add `-- --no-photos` to seed text only.
 Follow it with `npm run migrate:languages` for Italian, German and Russian.
+
+### Adding items to a live dataset
+
+New items from the owner go into
+[`src/lib/menuContent.ts`](src/lib/menuContent.ts) (and the other three
+languages into `menuTranslations.ts`), then into a dataset that is already live
+with:
+
+```bash
+npm run menu:new-items -- --dry-run
+```
+
+```bash
+npm run menu:new-items
+```
+
+It writes only the items listed in `NEW_ITEMS` at the top of
+[`scripts/new-items.ts`](scripts/new-items.ts) — everything else in the dataset,
+including photos and prices edited in the Studio, is left alone, which
+`npm run seed` cannot promise. Each item is slotted between the neighbours it
+has in the master file, so it lands where the master file puts it without
+re-ranking the menu. Safe to re-run: an item already there is updated in place
+and keeps the position it has been dragged to. Follow it with
+`npm run migrate:languages`.
+
+An item can go in switched off — `available: false` in the master file — for
+something announced but not being served yet. Sanity keeps the document and the
+menu leaves it out until **Available today** is switched on in the Studio.
 
 Two one-off migrations exist for datasets seeded before those features, both
 with a `--dry-run` first: `npm run migrate:order` (numeric order → drag-and-drop

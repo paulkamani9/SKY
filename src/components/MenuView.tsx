@@ -705,8 +705,8 @@ function SectionBlock({
   const bannerUrl = category.bannerUrl;
 
   // The opening section is the one place a tile stays wordless until it is
-  // turned over: it is eleven scoops of gelato, the pictures carry it, and the
-  // flip is the first thing that tells a guest this menu is worth touching.
+  // turned over: it is a wall of gelato, the pictures carry it, and the flip
+  // is the first thing that tells a guest this menu is worth touching.
   // Everywhere else the name is printed under the photo, so a guest scanning
   // for a specific dish does not have to flip nine tiles to find it.
   const showNames = !isFirst;

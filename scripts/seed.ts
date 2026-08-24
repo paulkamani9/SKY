@@ -218,7 +218,9 @@ async function seed() {
           : {}),
         orderRank: dishRanks[dishRankIndex++],
         order: dishIndex + 1,
-        available: true,
+        // Almost always true; false for an item that is on the menu but not
+        // being served yet, which the master file marks with `available`.
+        available: dish.available,
         ...(image ? { image } : {}),
       });
 

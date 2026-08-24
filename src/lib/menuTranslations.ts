@@ -53,6 +53,11 @@ export const groupTranslations: Record<string, GroupTranslation> = {
     titleDe: "Premium-Eis",
     titleRu: "Джелато премиум",
   },
+  Affogato: {
+    titleIt: "Affogato",
+    titleDe: "Affogato",
+    titleRu: "Аффогато",
+  },
   "Cold-Pressed Juices": {
     titleIt: "Succhi Estratti a Freddo",
     titleDe: "Kaltgepresste Säfte",
@@ -283,6 +288,62 @@ export const dishTranslations: Record<string, DishTranslation> = {
     descriptionIt: "Profumata, esotica e molto rinfrescante.",
     descriptionDe: "Duftend, exotisch und tief erfrischend.",
     descriptionRu: "Ароматная, экзотическая и очень освежающая.",
+  },
+  "gel-melon": {
+    nameIt: "Melone",
+    nameDe: "Melone",
+    nameRu: "Дыня",
+    descriptionIt: "Fresco, morbido e delicatamente dolce.",
+    descriptionDe: "Kühl, mild und dezent süß.",
+    descriptionRu: "Прохладный, мягкий и деликатно сладкий.",
+  },
+  "gel-avocado": {
+    nameIt: "Avocado",
+    nameDe: "Avocado",
+    nameRu: "Авокадо",
+    descriptionIt:
+      "Setoso, leggermente nocciolato e sorprendentemente rinfrescante.",
+    descriptionDe: "Seidig, zart nussig und überraschend erfrischend.",
+    descriptionRu:
+      "Шелковистый, с лёгкой ореховой ноткой и неожиданно освежающий.",
+  },
+  "gel-letchi": {
+    nameIt: "Litchi",
+    nameDe: "Litschi",
+    nameRu: "Личи",
+    descriptionIt: "Delicato, floreale e inconfondibilmente isolano.",
+    descriptionDe: "Zart, blumig und unverkennbar von der Insel.",
+    descriptionRu: "Нежный, цветочный и по-настоящему островной.",
+  },
+  "gel-watermelon": {
+    nameIt: "Anguria",
+    nameDe: "Wassermelone",
+    nameRu: "Арбуз",
+    descriptionIt: "Leggera, succosa e dissetante.",
+    descriptionDe: "Leicht, saftig und durstlöschend.",
+    descriptionRu: "Лёгкий, сочный и утоляющий жажду.",
+  },
+  "gel-bergamot": {
+    nameIt: "Bergamotto",
+    nameDe: "Bergamotte",
+    nameRu: "Бергамот",
+    descriptionIt: "Agrume profumato e brillante, dal finale pulito.",
+    descriptionDe: "Helle, duftende Zitrusnote mit klarem Abgang.",
+    descriptionRu: "Яркий ароматный цитрус с чистым послевкусием.",
+  },
+  "gel-affogato": {
+    nameIt: "Affogato",
+    nameDe: "Affogato",
+    nameRu: "Аффогато",
+    descriptionIt:
+      "Il gelato che preferisci, affogato al banco sotto un espresso specialty appena estratto. Scegli il gusto fra quelli qui sopra.",
+    descriptionDe:
+      "Das Eis Ihrer Wahl, an der Theke unter einem frisch gebrühten Specialty-Espresso ertränkt. Wählen Sie eine Sorte von oben.",
+    descriptionRu:
+      "Джелато на ваш выбор, залитое у стойки свежесваренным эспрессо. Выберите любой вкус из списка выше.",
+    priceNoteIt: "Chiedi al nostro team",
+    priceNoteDe: "Fragen Sie unser Team",
+    priceNoteRu: "Уточните у нашей команды",
   },
   "gel-vanilla": {
     nameIt: "Vaniglia Classica",
@@ -657,6 +718,17 @@ export const dishTranslations: Record<string, DishTranslation> = {
     descriptionRu:
       "Тёплый слоёный круассан с кремово расплавленной моцареллой, толстыми ломтиками свежих местных томатов и ярким домашним песто из базилика.",
   },
+  "bf-croque": {
+    nameIt: "Il Croque Monsieur",
+    nameDe: "Der Croque Monsieur",
+    nameRu: "Крок-месье",
+    descriptionIt:
+      "Il classico dei caffè francesi, gratinato e dorato. Prosciutto di pollo e formaggio fuso fra due fette spesse di pane. Su richiesta è disponibile anche in versione vegetariana.",
+    descriptionDe:
+      "Der französische Caféklassiker, goldbraun getoastet. Hähnchenschinken und geschmolzener Käse zwischen dick geschnittenem Brot. Auf Wunsch auch vegetarisch.",
+    descriptionRu:
+      "Классика французских кафе, запечённая до золотистой корочки. Куриная ветчина и расплавленный сыр между двумя толстыми ломтями хлеба. По запросу — вегетарианский вариант.",
+  },
   "bf-salmon": {
     nameIt: "Croissant Gourmet al Salmone Affumicato",
     nameDe: "Gourmet-Croissant mit Räucherlachs",
@@ -942,6 +1014,17 @@ export const dishTranslations: Record<string, DishTranslation> = {
       "Eine Premium-Portion zarter Calamari in leichter, gewürzter Panade, goldbraun frittiert. Serviert mit Ketchup, Sweet-Chili-Sauce oder nach Wunsch.",
     descriptionRu:
       "Премиальная порция нежного кальмара в лёгкой пряной панировке, обжаренного до идеальной золотистости. Подаём с кетчупом, соусом сладкий чили или по вашему пожеланию.",
+  },
+  "bite-fish": {
+    nameIt: "Fish & Chips Croccante",
+    nameDe: "Knuspriges Fish & Chips",
+    nameRu: "Хрустящий фиш-энд-чипс",
+    descriptionIt:
+      "Filetto di pesce locale fresco impanato nel pangrattato panko e fritto fino a doratura. Servito con patatine fritte condite, la nostra salsa classica fatta in casa e uno spicchio di limone fresco.",
+    descriptionDe:
+      "Frisches Filet vom heimischen Fisch in Panko-Panade goldbraun frittiert. Dazu gewürzte Pommes frites, unsere klassische hausgemachte Sauce und eine frische Zitronenspalte.",
+    descriptionRu:
+      "Филе свежей местной рыбы в панировке панко, обжаренное до золотистой корочки. Подаётся с приправленным картофелем фри, нашим домашним классическим соусом и долькой свежего лимона.",
   },
   "bite-chicken": {
     nameIt: "Bocconcini di Pollo Dorati",
