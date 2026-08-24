@@ -156,11 +156,38 @@ npm run menu:new-items
 It writes only the items listed in `NEW_ITEMS` at the top of
 [`scripts/new-items.ts`](scripts/new-items.ts) — everything else in the dataset,
 including photos and prices edited in the Studio, is left alone, which
-`npm run seed` cannot promise. Each item is slotted between the neighbours it
+`npm run seed` cannot promise. A new item is slotted between the neighbours it
 has in the master file, so it lands where the master file puts it without
-re-ranking the menu. Safe to re-run: an item already there is updated in place
-and keeps the position it has been dragged to. Follow it with
-`npm run migrate:languages`.
+re-ranking the menu. Safe to re-run: an item already there is updated in place,
+keeps the position it has been dragged to, and fields that already agree are
+not written at all.
+
+**Some items are in Sanity but not in the master file** — added by hand in the
+Studio, never written back — so they carry a generated id and whatever name was
+typed into the box. Recognising one of those is the difficulty: miss it and the
+dish goes on the menu twice. An item is matched on its id, then on its exact
+name within its section, then on its exact name anywhere, then on a name whose
+significant words are a subset of the other's ("The Croque Monsieur" against
+"Croque monsieur sandwich") — and anything ambiguous is skipped for a human
+rather than guessed at. One-word names are matched on the id or the whole name
+only, so "Melon" cannot claim every dish with melon in it; where that leaves a
+possible duplicate the run says so and adds nothing until you pin it:
+
+```ts
+{ id: "bf-croque", existing: "<the id --list prints>" },
+```
+
+```bash
+npm run menu:new-items -- --list
+```
+
+prints every item in the dataset with its id, name, price and whether it is
+currently on the menu — the list to copy an `existing` id from. `--list` and
+`--dry-run` only read; applying needs the write token.
+
+The dry run prints every match it made and every field it would change, old
+value to new. Read it before applying: where the Studio's wording is better
+than the master file's, take the price and leave the wording.
 
 An item can go in switched off — `available: false` in the master file — for
 something announced but not being served yet. Sanity keeps the document and the
