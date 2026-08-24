@@ -169,13 +169,23 @@ dish goes on the menu twice. An item is matched on its id, then on its exact
 name within its section, then on its exact name anywhere, then on a name whose
 significant words are a subset of the other's ("The Croque Monsieur" against
 "Croque monsieur sandwich") — and anything ambiguous is skipped for a human
-rather than guessed at. One-word names are matched on the id or the whole name
-only, so "Melon" cannot claim every dish with melon in it; where that leaves a
-possible duplicate the run says so and adds nothing until you pin it:
+rather than guessed at.
+
+One-word names are matched on the id or the whole name only, so "Melon" cannot
+claim every dish with melon in it. That leaves a gap the run closes by stopping:
+if nothing matched but the same section holds something sharing every word of
+the name — "Melon" against "Melon sorbet" — it adds nothing and asks. Answer it
+in `NEW_ITEMS`, with the id if they are the same dish, or `null` for "I have
+read the list and this one really is new":
 
 ```ts
 { id: "bf-croque", existing: "<the id --list prints>" },
+{ id: "gel-melon", existing: null },
 ```
+
+A near-name in a *different* section is taken to be a different dish sharing a
+word — Avocado the sorbet against The SKY Avocado Toast — and only mentioned in
+passing.
 
 ```bash
 npm run menu:new-items -- --list

@@ -70,3 +70,36 @@ export function ranksBetween(
 
   return ranks;
 }
+
+/**
+ * The sort key for a document being slotted into a menu that is already ranked.
+ *
+ * `order` is the menu in the order it should end up — the master file's — and
+ * `ranks` holds the key of every document of it that Sanity already has, under
+ * the id `order` calls it by. The new document takes a key between its nearest
+ * ranked neighbour on each side, so it lands where the master file puts it
+ * without any other document being rewritten.
+ *
+ * Both neighbours may be missing: a run of new items at the end of the menu has
+ * nothing after it, and an empty `ranks` means nothing to measure from at all.
+ * Recording each key as it is assigned is what keeps a run of them in order —
+ * each becomes the next one's neighbour.
+ *
+ * Used by scripts/new-items.ts.
+ */
+export function rankAmong(
+  order: string[],
+  ranks: Map<string, string>,
+  index: number,
+): string {
+  const before = [...order.slice(0, index)]
+    .reverse()
+    .map((id) => ranks.get(id))
+    .find(Boolean);
+  const after = order
+    .slice(index + 1)
+    .map((id) => ranks.get(id))
+    .find(Boolean);
+
+  return ranksBetween(before, after, 1)[0];
+}

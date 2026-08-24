@@ -323,7 +323,7 @@ export const menuCategories: Category[] = [
       },
       /*
        * Filed here rather than under Coffee: the whole point is choosing a
-       * flavour, and the flavours are the eleven lines directly above it.
+       * flavour, and the flavours are the lines directly above it.
        *
        * PRICE NOT SET — the owner has not quoted one, so it shows the note
        * instead of a number. Put the real price in the Studio and the note

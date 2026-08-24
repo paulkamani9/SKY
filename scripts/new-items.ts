@@ -43,7 +43,7 @@ import {
   normalise,
   relatedDishes,
 } from "../src/sanity/matchDish";
-import { ranksBetween } from "../src/sanity/orderRank";
+import { rankAmong } from "../src/sanity/orderRank";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
@@ -72,11 +72,15 @@ type NewItem = {
   /** The item's id in menuContent.ts, which is where its content comes from. */
   id: string;
   /**
-   * The id of the document in Sanity this item already is, when the matching
-   * below cannot work it out on its own — `--list` prints the ids to copy from.
-   * Set it and no matching is attempted: that document is the one updated.
+   * Settles by hand what the matching below cannot work out on its own.
+   *
+   * An id — `--list` prints them — is the document in Sanity this item already
+   * is: that one is updated and no matching is attempted. `null` is the other
+   * answer, "I have read the list and nothing there is this dish", which adds
+   * it as new over the run's own doubts. Leave it off and the run works it out,
+   * stopping to ask when it cannot.
    */
-  existing?: string;
+  existing?: string | null;
 };
 
 /**
@@ -192,7 +196,11 @@ async function main() {
     for (const category of categories) {
       console.log(`## ${category.titleEn}`);
       for (const dish of dishes.filter((d) => d.categoryId === category._id)) {
-        const price = dish.price ? `Rs ${dish.price}` : (dish.priceNoteEn ?? "—");
+        // typeof, not truthiness: a price of 0 is a price.
+        const price =
+          typeof dish.price === "number"
+            ? `Rs ${dish.price}`
+            : (dish.priceNoteEn ?? "—");
         console.log(
           `   ${dish._id.padEnd(38)} ${(dish.nameEn ?? "").padEnd(34)} ${price}${
             dish.available === false ? "  (off the menu)" : ""
@@ -270,7 +278,7 @@ async function main() {
         skipped += 1;
         continue;
       }
-    } else {
+    } else if (existing !== null) {
       const found = matchDish(id, dish.nameEn, category._id, dishes);
       if (found.candidates) {
         console.warn(
@@ -285,7 +293,46 @@ async function main() {
         continue;
       }
       match = found.id ? byId.get(found.id) : undefined;
+
+      // Nothing matched — but a one-word name is never matched on its word
+      // alone, so "Melon" cannot recognise "Melon sorbet" sitting in its own
+      // section. Rather than put the dish on the menu twice, stop and let a
+      // person say which it is. Something of that name in another section is
+      // a different dish sharing a word (Avocado, the avocado toast), so that
+      // is said out loud and passed over.
+      if (!match) {
+        const related = relatedDishes(dish.nameEn, dishes);
+        const here = related.filter((r) => r.categoryId === category._id);
+
+        for (const near of related.filter((r) => !here.includes(r))) {
+          console.log(
+            `      · "${near.nameEn}" (${near._id}) in ${
+              sectionName.get(near.categoryId ?? "") ?? "no section"
+            } shares a word with this — taken to be a different dish`,
+          );
+        }
+
+        if (here.length > 0) {
+          console.warn(
+            `  ! ${dish.nameEn} may already be on the menu as one of these — adding nothing until it is settled:`,
+          );
+          for (const near of here) {
+            console.warn(`      ${near._id}  "${near.nameEn}"`);
+          }
+          console.warn(
+            `      set \`existing\` to one of those ids in NEW_ITEMS, or to null if this really is a new dish, and re-run`,
+          );
+          skipped += 1;
+          continue;
+        }
+      }
     }
+
+    // A match found under a generated id still holds the position the master
+    // file's neighbours are measured from, so it is recorded under the id they
+    // are looked up by — otherwise the next new item beside it is ranked
+    // against something further away and can land on the wrong side of it.
+    if (match?.orderRank) ranks.set(id, match.orderRank);
 
     // An item found somewhere other than where the master file files it has
     // been put there deliberately in the Studio. Its wording and price are
@@ -382,17 +429,13 @@ async function main() {
     }
 
     // Slot it between the neighbours it has in the master file, skipping any
-    // that are not in Sanity — the last new item added becomes the neighbour
-    // of the next, so a run of them keeps its order.
-    const before = [...master.slice(0, index)]
-      .reverse()
-      .map(({ dish: d }) => ranks.get(d._id))
-      .find(Boolean);
-    const after = master
-      .slice(index + 1)
-      .map(({ dish: d }) => ranks.get(d._id))
-      .find(Boolean);
-    const [orderRank] = ranksBetween(before, after, 1);
+    // that are not in Sanity — and record it, so it is the neighbour the next
+    // new item beside it measures from.
+    const orderRank = rankAmong(
+      master.map(({ dish: d }) => d._id),
+      ranks,
+      index,
+    );
     ranks.set(id, orderRank);
 
     added += 1;
@@ -401,16 +444,6 @@ async function main() {
         dish.available === false ? " — not available yet" : ""
       }`,
     );
-    // Nothing matched, but a one-word name is not allowed to match on its
-    // word alone — so say what it might have been rather than quietly putting
-    // a second copy of the same dish on the menu.
-    for (const near of relatedDishes(dish.nameEn, dishes)) {
-      console.log(
-        `      ? the dataset already has "${near.nameEn}" (${near._id}) in ${
-          sectionName.get(near.categoryId ?? "") ?? "no section"
-        } — if that is this dish, set \`existing\` on it and re-run`,
-      );
-    }
     itemMutations.push((t) =>
       t
         .createIfNotExists({ _id: id, _type: "dish", ...fields })
