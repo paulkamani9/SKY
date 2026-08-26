@@ -1076,6 +1076,7 @@ function DishRow({
   const price = hidePrice ? null : priceLabel(dish, lang, currency);
   const numeric = isNumericPrice(dish);
   const soldOut = dish.available === false;
+  const thumb = dish.showImageInList ? dish.imageUrl : null;
 
   return (
     <li
@@ -1087,10 +1088,32 @@ function DishRow({
       <button
         type="button"
         onClick={onOpen}
-        className={`flex w-full items-baseline gap-3 px-4 py-3 text-left transition active:opacity-60 ${
-          soldOut ? "opacity-55" : ""
-        }`}
+        className={`flex w-full gap-3 px-4 py-3 text-left transition active:opacity-60 ${
+          thumb ? "items-center" : "items-baseline"
+        } ${soldOut ? "opacity-55" : ""}`}
       >
+        {/* A compact list prints names and prices only — fourteen cups of
+            coffee would say nothing. An item can opt out of that in the Studio
+            when its photo genuinely earns the space. */}
+        {thumb ? (
+          <img
+            src={thumb}
+            srcSet={dish.imageSrcSet ?? undefined}
+            sizes="72px"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            width={72}
+            height={72}
+            className="shrink-0 object-contain"
+            style={{
+              width: 72,
+              height: 72,
+              filter: "drop-shadow(0 6px 12px rgb(1 32 39 / 0.45))",
+            }}
+          />
+        ) : null}
+
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-2">
             <h4 className="text-[14.5px] leading-snug font-medium">{name}</h4>

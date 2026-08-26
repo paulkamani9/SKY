@@ -35,6 +35,8 @@ export type Dish = Translated<"name"> &
   /** Null for items priced on selection — show the price note instead. */
   price: number | null;
   available: boolean;
+  /** Opt-in: print this item's photo even in a compact-list section. */
+  showImageInList?: boolean;
   imageUrl: string | null;
   imageUrlLarge: string | null;
   /**
@@ -128,6 +130,7 @@ const menuQuery = groq`{
     "groupDe": subcategory->titleDe,
     "groupRu": subcategory->titleRu,
     "available": coalesce(available, true),
+    "showImageInList": coalesce(showImageInList, false),
     image
   }
 }[count(dishes) > 0],

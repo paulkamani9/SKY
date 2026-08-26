@@ -90,6 +90,16 @@ export const dish = defineType({
       initialValue: true,
     }),
 
+    defineField({
+      name: "showImageInList",
+      title: "Show the photo in a compact list",
+      type: "boolean",
+      group: "placement",
+      description:
+        "Sections set to \"Compact list\" normally print names and prices only. Turn this on for an item whose photo is worth the space anyway — an affogato among the coffees. Ignored in photo-grid sections, which always show the picture.",
+      initialValue: false,
+    }),
+
     ...translated("name", "Name"),
     ...translated("description", "Description", { type: "text" }),
     ...translated("priceNote", "Price note"),
