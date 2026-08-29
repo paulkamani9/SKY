@@ -120,6 +120,31 @@ export const dish = defineType({
       group: "placement",
       description:
         'Optional heading within the section, e.g. "Premium Gelato". Leave empty for items that sit directly under the section title.',
+      /*
+       * The filter below only constrains what you can *pick*. It does nothing
+       * about a value already set, so moving an item to another section used to
+       * leave the old group attached — a gelato dragged into Coffee kept
+       * "Premium Gelato" and printed that heading inside the coffee list, with
+       * no warning anywhere. This catches that on publish.
+       */
+      validation: (r) =>
+        r.custom(async (value, context) => {
+          const ref = (value as { _ref?: string } | undefined)?._ref;
+          if (!ref) return true;
+
+          const categoryRef = (
+            context.document as { category?: { _ref?: string } } | undefined
+          )?.category?._ref;
+          if (!categoryRef) return "Choose a menu section first.";
+
+          const owner = await context
+            .getClient({ apiVersion: "2024-01-01" })
+            .fetch<string | null>("*[_id == $id][0].category._ref", { id: ref });
+
+          return owner === categoryRef
+            ? true
+            : "This group belongs to a different section. Pick a group from the section chosen above, or clear this field.";
+        }),
       // Only offer sub-sections belonging to the section already chosen above,
       // so a Coffee item can never be filed under a Gelato group.
       options: {
