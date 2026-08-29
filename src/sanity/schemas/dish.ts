@@ -110,6 +110,11 @@ export const dish = defineType({
       type: "reference",
       to: [{ type: "category" }],
       group: "placement",
+      // Clicking a reference that already has a value opens the referenced
+      // document rather than offering to change it — Studio behaviour we cannot
+      // override, and not something anyone guesses. So it is spelled out.
+      description:
+        "To move this item to a different section, use the ⋮ menu at the right of this field and choose Replace. Clear the group below at the same time, or pick a new one from the section you moved to.",
       validation: (r) => r.required(),
     }),
     defineField({
@@ -119,7 +124,7 @@ export const dish = defineType({
       to: [{ type: "subcategory" }],
       group: "placement",
       description:
-        'Optional heading within the section, e.g. "Premium Gelato". Leave empty for items that sit directly under the section title.',
+        'Optional heading within the section, e.g. "Premium Gelato". Leave empty for items that sit directly under the section title. To change or remove it, use the ⋮ menu at the right of this field and choose Replace or Clear.',
       /*
        * The filter below only constrains what you can *pick*. It does nothing
        * about a value already set, so moving an item to another section used to
