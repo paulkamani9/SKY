@@ -124,11 +124,20 @@ const menuQuery = groq`{
     priceNoteEn, priceNoteFr, priceNoteIt, priceNoteDe, priceNoteRu,
     // The sub-section is the source of truth; the legacy free-text group is
     // the fallback for any item not yet migrated onto a reference.
-    "groupEn": coalesce(subcategory->titleEn, groupEn),
-    "groupFr": coalesce(subcategory->titleFr, groupFr),
-    "groupIt": subcategory->titleIt,
-    "groupDe": subcategory->titleDe,
-    "groupRu": subcategory->titleRu,
+    //
+    // Guarded on the sub-section actually belonging to this item's section.
+    // Moving an item between sections leaves its old group attached, and the
+    // menu then printed that section's heading inside the new one — a tea
+    // moved into Coffee put "Hot Artisanal Steeps" under the espressos. The
+    // Studio now blocks publishing that, but only once its schema is
+    // redeployed, and nothing stops the same edit arriving through the API.
+    // A group that does not belong is ignored: the item sits directly under
+    // its section title, which is merely plain rather than wrong.
+    "groupEn": select(subcategory->category._ref == category._ref => subcategory->titleEn, groupEn),
+    "groupFr": select(subcategory->category._ref == category._ref => subcategory->titleFr, groupFr),
+    "groupIt": select(subcategory->category._ref == category._ref => subcategory->titleIt),
+    "groupDe": select(subcategory->category._ref == category._ref => subcategory->titleDe),
+    "groupRu": select(subcategory->category._ref == category._ref => subcategory->titleRu),
     "available": coalesce(available, true),
     "showImageInList": coalesce(showImageInList, false),
     image
