@@ -6,6 +6,7 @@ import { structureTool } from "sanity/structure";
 
 import { apiVersion, dataset, projectId } from "@/sanity/env";
 import { schemaTypes } from "@/sanity/schemas";
+import { moveSectionActions } from "@/sanity/moveSection";
 import { soldOutActions } from "@/sanity/soldOut";
 import { FRUIT_SELECTION_ID, SETTINGS_ID, structure } from "@/sanity/structure";
 
@@ -42,7 +43,9 @@ export default defineConfig({
           ["publish", "discardChanges", "restore"].includes(action ?? ""),
         );
       }
-      return context.schemaType === "dish" ? soldOutActions(prev) : prev;
+      return context.schemaType === "dish"
+        ? moveSectionActions(soldOutActions(prev))
+        : prev;
     },
   },
   tools: (prev, { currentUser }) =>
