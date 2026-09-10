@@ -60,10 +60,9 @@ read.
 - **One item per row on a phone** — the **wideTiles** switch on a section, for
   the two fruit bowls, whose photos are the point and were being shrunk to
   thumbnails by the standard two-up grid.
-- **Names under the tile** — every photo grid but the first prints the item name
-  under the picture, above the price. Gelato & Sorbets alone keeps its names on
-  the back of the tile: a wall of scoops that the pictures carry, where the flip
-  is what tells a guest the menu is worth touching.
+- **Names under the tile** — every photo grid prints the item name under the
+  picture, above the price, so a guest scanning for one dish can read the grid
+  rather than flip through it. The back of the tile is the description alone.
 
 ### The other three languages
 

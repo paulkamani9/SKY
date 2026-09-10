@@ -704,13 +704,6 @@ function SectionBlock({
   const isGrid = category.layout !== "list";
   const bannerUrl = category.bannerUrl;
 
-  // The opening section is the one place a tile stays wordless until it is
-  // turned over: it is a wall of gelato, the pictures carry it, and the flip
-  // is the first thing that tells a guest this menu is worth touching.
-  // Everywhere else the name is printed under the photo, so a guest scanning
-  // for a specific dish does not have to flip nine tiles to find it.
-  const showNames = !isFirst;
-
   const heading = (
     <>
       <h2
@@ -793,7 +786,6 @@ function SectionBlock({
                   lang={lang}
                   currency={currency}
                   hidePrice={group.sharedPrice !== null}
-                  showName={showNames}
                 />
               ))}
             </ul>
@@ -865,22 +857,19 @@ function SectionBlock({
 
 /**
  * A dish in a grid section: no card, no frame. The cut-out photo sits straight
- * on the navy ground with its price beneath it, and a tap flips the tile over
- * to reveal the name and description. Tapping again flips it back.
+ * on the navy ground with its name and price beneath it, and a tap flips the
+ * tile over to reveal the description. Tapping again flips it back.
  */
 function DishCard({
   dish,
   lang,
   currency,
   hidePrice,
-  showName,
 }: {
   dish: Dish;
   lang: Lang;
   currency: string;
   hidePrice: boolean;
-  /** Print the name under the photo instead of keeping it on the back face. */
-  showName: boolean;
 }) {
   const [flipped, setFlipped] = useState(false);
   // Measured on the server so the first paint is already the right size — see
@@ -895,33 +884,27 @@ function DishCard({
 
   // Name above price, both under the picture. Rendered once and used by the
   // photo tile and the text-only tile alike, so the two stay in step.
-  const caption =
-    showName || price ? (
-      <div className="mt-2.5 flex flex-col gap-1 text-center">
-        {showName ? (
-          <h4
-            className="text-[13px] leading-snug font-medium"
-            style={{
-              color: "var(--ink)",
-              opacity: soldOut ? 0.6 : 1,
-            }}
-          >
-            {name}
-          </h4>
-        ) : null}
-        {price ? (
-          <p
-            className={`text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
-            style={{
-              color: numeric ? "var(--gold-strong)" : "var(--muted)",
-              opacity: soldOut ? 0.6 : 1,
-            }}
-          >
-            {price}
-          </p>
-        ) : null}
-      </div>
-    ) : null;
+  const caption = (
+    <div className="mt-2.5 flex flex-col gap-1 text-center">
+      <h4
+        className="text-[13px] leading-snug font-medium"
+        style={{ color: "var(--ink)", opacity: soldOut ? 0.6 : 1 }}
+      >
+        {name}
+      </h4>
+      {price ? (
+        <p
+          className={`text-[13px] font-semibold ${numeric ? "tabular-nums" : "italic"}`}
+          style={{
+            color: numeric ? "var(--gold-strong)" : "var(--muted)",
+            opacity: soldOut ? 0.6 : 1,
+          }}
+        >
+          {price}
+        </p>
+      ) : null}
+    </div>
+  );
 
   // Nothing to flip away from, so this one just reads as text. It keeps the
   // square footprint of its neighbours so the grid rows stay level.
@@ -932,14 +915,6 @@ function DishCard({
           className="flex aspect-square w-full flex-col justify-center gap-1.5 px-1 text-center"
           style={{ opacity: soldOut ? 0.55 : 1 }}
         >
-          {showName ? null : (
-            <h4
-              className="text-[14px] leading-snug font-medium"
-              style={{ color: "var(--gold-strong)" }}
-            >
-              {name}
-            </h4>
-          )}
           {description ? (
             <p
               className="line-clamp-6 text-[11.5px] leading-relaxed"
@@ -969,8 +944,8 @@ function DishCard({
         type="button"
         onClick={() => setFlipped((f) => !f)}
         aria-expanded={flipped}
-        // The visible face carries no name until it is flipped, so the button
-        // has to name the dish itself for anyone not reading the picture.
+        // Names the dish on its own rather than letting the label be read off
+        // the caption, so a screen reader hears "Mango", not "Mango Rs 125".
         aria-label={name}
         className="block w-full text-left"
       >
@@ -1027,17 +1002,9 @@ function DishCard({
               className="absolute inset-0 flex flex-col justify-center gap-1.5 px-1 text-center [backface-visibility:hidden] [transform:rotateY(180deg)]"
               aria-hidden={!flipped}
             >
-              {/* The name is already printed under the tile in every section
-                  but the first, so repeating it here would only crowd out the
-                  description this face exists to show. */}
-              {showName ? null : (
-                <h4
-                  className="text-[14px] leading-snug font-medium"
-                  style={{ color: "var(--gold-strong)" }}
-                >
-                  {name}
-                </h4>
-              )}
+              {/* The name is printed under the tile, so repeating it here
+                  would only crowd out the description this face exists to
+                  show. */}
               {description ? (
                 <p
                   className="line-clamp-6 text-[11.5px] leading-relaxed"
