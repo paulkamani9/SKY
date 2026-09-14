@@ -322,6 +322,53 @@ export const menuCategories: Category[] = [
         photoId: "1501443762994-82bd5dace89a",
       },
       /*
+       * Added by the owner on 14 September, already in the display case — so
+       * on the menu from the start. No photos yet; the tiles show their names
+       * until real ones go in through the Studio.
+       */
+      {
+        id: "gel-coffee",
+        en: "Coffee",
+        fr: "Café",
+        descEn: "Smooth, roasted, and gently bittersweet.",
+        descFr: "Onctueux, torréfié et délicatement doux-amer.",
+        price: 125,
+        groupEn: "Premium Gelato",
+        groupFr: "Glaces Premium",
+      },
+      {
+        id: "gel-kinder",
+        en: "Kinder Bueno",
+        fr: "Kinder Bueno",
+        descEn:
+          "Creamy hazelnut and milk chocolate with crisp wafer pieces.",
+        descFr:
+          "Noisette crémeuse et chocolat au lait, parsemés d'éclats de gaufrette croustillante.",
+        price: 125,
+        groupEn: "Premium Gelato",
+        groupFr: "Glaces Premium",
+      },
+      {
+        id: "gel-rumraisin",
+        en: "Rum & Raisin",
+        fr: "Rhum-Raisin",
+        descEn: "A timeless classic of plump, rum-soaked raisins.",
+        descFr: "Un grand classique aux raisins moelleux macérés au rhum.",
+        price: 125,
+        groupEn: "Premium Gelato",
+        groupFr: "Glaces Premium",
+      },
+      {
+        id: "gel-tiramisu",
+        en: "Tiramisu",
+        fr: "Tiramisu",
+        descEn: "Espresso, mascarpone cream, and a dusting of cocoa.",
+        descFr: "Espresso, crème de mascarpone et une touche de cacao.",
+        price: 125,
+        groupEn: "Premium Gelato",
+        groupFr: "Glaces Premium",
+      },
+      /*
        * Filed here rather than under Coffee: the whole point is choosing a
        * flavour, and the flavours are the lines directly above it.
        *

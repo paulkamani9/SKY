@@ -394,6 +394,41 @@ export const dishTranslations: Record<string, DishTranslation> = {
     descriptionRu:
       "Кисловатая малина прожилками на сливочной чизкейковой основе.",
   },
+  "gel-coffee": {
+    nameIt: "Caffè",
+    nameDe: "Kaffee",
+    nameRu: "Кофе",
+    descriptionIt: "Morbido, tostato e delicatamente agrodolce.",
+    descriptionDe: "Sanft, geröstet und dezent bittersüß.",
+    descriptionRu: "Мягкий, обжаренный, с лёгкой горчинкой.",
+  },
+  "gel-kinder": {
+    nameIt: "Kinder Bueno",
+    nameDe: "Kinder Bueno",
+    nameRu: "Киндер Буэно",
+    descriptionIt:
+      "Nocciola cremosa e cioccolato al latte con croccanti pezzi di wafer.",
+    descriptionDe:
+      "Cremige Haselnuss und Milchschokolade mit knusprigen Waffelstücken.",
+    descriptionRu:
+      "Сливочный фундук и молочный шоколад с хрустящими кусочками вафли.",
+  },
+  "gel-rumraisin": {
+    nameIt: "Rum e Uvetta",
+    nameDe: "Rum-Rosine",
+    nameRu: "Ром с изюмом",
+    descriptionIt: "Un classico senza tempo con uvetta morbida macerata nel rum.",
+    descriptionDe: "Ein zeitloser Klassiker mit saftigen, in Rum getränkten Rosinen.",
+    descriptionRu: "Вечная классика с сочным изюмом, вымоченным в роме.",
+  },
+  "gel-tiramisu": {
+    nameIt: "Tiramisù",
+    nameDe: "Tiramisu",
+    nameRu: "Тирамису",
+    descriptionIt: "Espresso, crema al mascarpone e una spolverata di cacao.",
+    descriptionDe: "Espresso, Mascarponecreme und ein Hauch Kakao.",
+    descriptionRu: "Эспрессо, крем из маскарпоне и лёгкая пудра какао.",
+  },
 
   // Fruit Bowls
   "bowl-build": {

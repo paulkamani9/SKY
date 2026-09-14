@@ -89,20 +89,11 @@ type NewItem = {
  * this list is the only thing to edit when the next batch comes in.
  */
 const NEW_ITEMS: NewItem[] = [
-  // Announced 23 August, not being served yet: they go in switched off.
-  { id: "gel-melon" },
-  { id: "gel-avocado" },
-  { id: "gel-letchi" },
-  { id: "gel-watermelon" },
-  { id: "gel-bergamot" },
-  { id: "gel-affogato" },
-  // These two are already on the menu — added in the Studio, never written
-  // back to the master file. What this run does to them is update the price
-  // and the wording the owner sent. If --dry-run reports them as new, or as
-  // ambiguous, put the id --list prints into `existing` rather than letting
-  // the run add a second copy.
-  { id: "bf-croque" },
-  { id: "bite-fish" },
+  // Sent 14 September, already in the display case: they go in switched on.
+  { id: "gel-coffee" },
+  { id: "gel-kinder" },
+  { id: "gel-rumraisin" },
+  { id: "gel-tiramisu" },
 ];
 
 /** Sub-section ids are derived from the group name; see scripts/seed.ts. */
