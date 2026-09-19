@@ -369,6 +369,24 @@ export const menuCategories: Category[] = [
         groupFr: "Glaces Premium",
       },
       /*
+       * The one the owner asked for on 18 September. "Gingeli Banana" is one
+       * flavour, not two: gingeli is the banana he churns it from — "the one
+       * and only sweetest banana" — so the variety is the name and the reason
+       * it is worth naming.
+       */
+      {
+        id: "gel-banana",
+        en: "Gingeli Banana",
+        fr: "Banane Gingeli",
+        descEn:
+          "Churned from gingeli, the sweetest banana on the island. Fragrant and naturally honeyed.",
+        descFr:
+          "Préparée au gingeli, la banane la plus sucrée de l'île. Parfumée et naturellement miellée.",
+        price: 125,
+        groupEn: "Premium Gelato",
+        groupFr: "Glaces Premium",
+      },
+      /*
        * Filed here rather than under Coffee: the whole point is choosing a
        * flavour, and the flavours are the lines directly above it.
        *

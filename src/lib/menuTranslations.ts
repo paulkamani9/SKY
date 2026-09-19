@@ -429,6 +429,17 @@ export const dishTranslations: Record<string, DishTranslation> = {
     descriptionDe: "Espresso, Mascarponecreme und ein Hauch Kakao.",
     descriptionRu: "Эспрессо, крем из маскарпоне и лёгкая пудра какао.",
   },
+  "gel-banana": {
+    nameIt: "Banana Gingeli",
+    nameDe: "Gingeli-Banane",
+    nameRu: "Банан гинджели",
+    descriptionIt:
+      "Preparato con il gingeli, la banana più dolce dell'isola. Profumato e naturalmente mielato.",
+    descriptionDe:
+      "Aus Gingeli gerührt, der süßesten Banane der Insel. Duftig und von Natur aus honigsüß.",
+    descriptionRu:
+      "Из бананов гинджели — самых сладких на острове. Ароматное и медово-сладкое от природы.",
+  },
 
   // Fruit Bowls
   "bowl-build": {

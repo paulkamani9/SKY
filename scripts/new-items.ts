@@ -89,11 +89,8 @@ type NewItem = {
  * this list is the only thing to edit when the next batch comes in.
  */
 const NEW_ITEMS: NewItem[] = [
-  // Sent 14 September, already in the display case: they go in switched on.
-  { id: "gel-coffee" },
-  { id: "gel-kinder" },
-  { id: "gel-rumraisin" },
-  { id: "gel-tiramisu" },
+  // Asked for on 18 September, to sit with the four from the 14th.
+  { id: "gel-banana" },
 ];
 
 /** Sub-section ids are derived from the group name; see scripts/seed.ts. */
